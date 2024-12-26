@@ -1,0 +1,44 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, '12.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter 
+build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def parse_KV_file(file, separator='=')
+  file_abs_path = File.expand_path(file)
+  if !File.exist?(file_abs_path)
+    return [];
+  end
+  file_lines = File.read(file_abs_path).split("\n")
+  return file_lines.map{|line| line.strip.split(separator)}.reject{|kv| 
+kv.length != 2}.map{|kv| [kv[0], kv[1]]}.to_h
+end
+
+flutter_root = File.expand_path('..', Dir.pwd)
+framework_dir = File.join(flutter_root, 'bin', 'cache', 'artifacts', 
+'engine', 'ios')
+
+engine_dir = File.expand_path('..', framework_dir)
+plugin_pods = parse_KV_file(File.join(engine_dir, 'Flutter', 
+'Generated.xcconfig'))
+
+plugin_pods.each do |key, value|
+  if key.start_with?('plugin_pods_')
+    plugin_name = key.split('_').last
+    pod plugin_name, :path => value
+  end
+end
+
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end

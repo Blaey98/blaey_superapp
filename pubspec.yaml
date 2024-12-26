@@ -1,0 +1,56 @@
+name: blaey_app
+description: Um app Flutter com 4 páginas e um menu inferior.
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.19.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.5
+  http: ^0.13.6
+  google_mobile_ads: ^2.0.0
+  carousel_slider: ^4.0.0
+  flutter_screenutil: ^5.0.0+2
+  flutter_neumorphic: ^3.2.0
+  rive: ^0.11.0
+  animated_bottom_navigation_bar: ^1.0.0+2
+  cupertino_icons: ^1.0.2
+  persistent_bottom_nav_bar: ^5.0.2
+  flutter_animate: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.10.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/icon_transparente.png
+    - assets/icons/app_icon.png
+    - assets/jogos/dama.png
+    - assets/jogos/xadrez.png
+    - assets/jogos/ludo.png
+    - assets/jogos/truco.png
+    - assets/jogos/jogo_da_velha.png
+    - assets/images/pesquisa.png
+    - assets/icons/logoblaey.png
+    - assets/icons/user.png
+    - assets/icons/moeda.png
+    - assets/animations/level_up.riv
+    - assets/images/opponent_photo.png
+    - assets/images/user_photo.png
+    - assets/jogos/dama_vermelho.png
+    - assets/jogos/dama_azul.png
+    - assets/images/fundo_preto.png
+
+
+
