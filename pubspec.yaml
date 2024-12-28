@@ -16,10 +16,12 @@ dependencies:
   flutter_screenutil: ^5.0.0+2
   flutter_neumorphic: ^3.2.0
   rive: ^0.11.0
-  animated_bottom_navigation_bar: ^1.0.0+2
+  image_picker: ^0.8.4+11
+  animated_bottom_navigation_bar: ^1.0.0
   cupertino_icons: ^1.0.2
   persistent_bottom_nav_bar: ^5.0.2
   flutter_animate: ^4.0.0
+  flutter_emoji: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +53,7 @@ flutter:
     - assets/jogos/dama_vermelho.png
     - assets/jogos/dama_azul.png
     - assets/images/fundo_preto.png
-
-
-
+    - assets/icons/plus.png
+    - assets/icons/fundo_mensagem.png
+    - assets/icons/perfil.png
+    - assets/icons/filter.png

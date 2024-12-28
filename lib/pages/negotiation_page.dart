@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'gamepage_dama.dart';
+import 'gamepage_xadrez.dart';
+import 'gamepage_ludo.dart';
+import 'gamepage_truco.dart';
+import 'gamepage_jogo_da_velha.dart';
 
 class NegotiationPage extends StatefulWidget {
   final String gameTitle;
@@ -12,11 +16,12 @@ class NegotiationPage extends StatefulWidget {
 }
 
 class _NegotiationPageState extends State<NegotiationPage> {
-  int betAmount = 1;  // Valor inicial da aposta ajustado para 1,00
+  int initialBet = 2;  // Valor inicial da aposta ajustado para 2,00 (1,00 por jogador)
+  int additionalBet = 0;  // Valor adicional das apostas
   int timeLeft = 15;  // Tempo para negociação
   int userBalance = 100; // Saldo atual do usuário
   int? selectedBet; // Valor da aposta selecionada
-  String betStatus = "Aposta Inicial:"; // Status da aposta
+  String betStatus = "Aposta Inicial"; // Status da aposta
   bool showAcceptRejectButtons = false; // Controle para mostrar botões de aceitar/rejeitar
 
   @override
@@ -34,11 +39,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
         });
         startTimer();
       } else if (timeLeft == 0) {
-        // Tempo acabou, vá para a tela do jogo
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => GamePageDama(betAmount: betAmount)),
-        );
+        _startGame();
       }
     });
   }
@@ -51,8 +52,8 @@ class _NegotiationPageState extends State<NegotiationPage> {
 
   void _confirmBet() {
     setState(() {
-      betAmount += selectedBet!;
-      betStatus = "Apostar?"; // Change status on offer
+      additionalBet += selectedBet!;
+      betStatus = "Apostar?"; // Mudar status quando a oferta é feita
       showAcceptRejectButtons = true; // Mostrar botões de aceitar/rejeitar
       selectedBet = null;
     });
@@ -60,16 +61,13 @@ class _NegotiationPageState extends State<NegotiationPage> {
 
   void _opponentAcceptBet() {
     setState(() {
-      betStatus = "Aposta feita!"; // Change status on opponent accept
+      betStatus = "Aposta feita!"; // Mudar status quando o oponente aceita
       showAcceptRejectButtons = false; // Esconder botões de aceitar/rejeitar
     });
 
     // Aguardar 1 segundo e ir para a tela do jogo
     Future.delayed(Duration(seconds: 1), () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => GamePageDama(betAmount: betAmount)),
-      );
+      _startGame();
     });
   }
 
@@ -77,16 +75,48 @@ class _NegotiationPageState extends State<NegotiationPage> {
     setState(() {
       selectedBet = null;
       showAcceptRejectButtons = false; // Esconder botões de aceitar/rejeitar
-      betStatus = "Aposta Inicial: \$${betAmount.toStringAsFixed(2)}"; // Restaurar status inicial
+      betStatus = "Aposta Inicial"; // Restaurar status inicial
     });
+  }
+
+  void _startGame() {
+    Widget gamePage;
+    int totalBetAmount = initialBet + additionalBet * 2;
+    switch (widget.gameTitle.toLowerCase()) {
+      case 'dama':
+        gamePage = GamePageDama(betAmount: totalBetAmount);
+        break;
+      case 'xadrez':
+        gamePage = GamePageXadrez(betAmount: totalBetAmount);
+        break;
+      case 'ludo':
+        gamePage = GamePageLudo(betAmount: totalBetAmount);
+        break;
+      case 'truco':
+        gamePage = GamePageTruco(betAmount: totalBetAmount);
+        break;
+      case 'jogo da velha':
+        gamePage = GamePageJogoDaVelha(betAmount: totalBetAmount);
+        break;
+      default:
+        gamePage = GamePageDama(betAmount: totalBetAmount);
+        break;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => gamePage),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    int totalBetAmount = initialBet + additionalBet * 2;
+    int individualBetAmount = (initialBet / 2).toInt() + additionalBet;
+
     return Scaffold(
       appBar: AppBar(
         title: Opacity(
-          opacity: 0.7, // 30% de transparência
+          opacity: 0.7,
           child: Text('Negocie sua aposta', style: TextStyle(color: Colors.white)),
         ),
         backgroundColor: Colors.black,
@@ -158,13 +188,17 @@ class _NegotiationPageState extends State<NegotiationPage> {
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text(
-                        '\$${betAmount.toStringAsFixed(2)}',
-                        style: TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+                      child: Row(
+                        children: [
+                          Text(
+                            '\$${totalBetAmount.toStringAsFixed(2)}',
+                            style: TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 5),
+                          Image.asset('assets/icons/moeda.png', width: 24, height: 24),
+                        ],
                       ),
                     ),
-                    SizedBox(width: 5),
-                    Image.asset('assets/icons/moeda.png', width: 24, height: 24),
                   ],
                 ),
                 SizedBox(height: 10),
@@ -183,6 +217,11 @@ class _NegotiationPageState extends State<NegotiationPage> {
                           'Usuário',
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
+                        // Exibir a aposta individual
+                        Text(
+                          '\$${individualBetAmount.toStringAsFixed(2)}',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                       ],
                     ),
                     Column(
@@ -192,7 +231,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
                           style: TextStyle(fontSize: 24, color: Colors.white),
                         ),
                         SizedBox(height: 10),
-                        Image.asset('assets/jogos/dama.png', width: 50, height: 50), // Imagem do jogo
+                        Image.asset('assets/jogos/${widget.gameTitle.toLowerCase()}.png', width: 50, height: 50), // Imagem do jogo dinâmico
                       ],
                     ),
                     Column(
@@ -206,6 +245,11 @@ class _NegotiationPageState extends State<NegotiationPage> {
                         Text(
                           'Oponente',
                           style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                        // Exibir a aposta individual
+                        Text(
+                          '\$${individualBetAmount.toStringAsFixed(2)}',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
                         ),
                       ],
                     ),
@@ -307,7 +351,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
           ),
         ],
       ),
-      backgroundColor: Colors.black, // Fundo preto
+      backgroundColor: Colors.black,
     );
   }
 
@@ -315,11 +359,14 @@ class _NegotiationPageState extends State<NegotiationPage> {
     return GestureDetector(
       onTap: () => _selectBet(amount),
       child: Container(
-        width: 100, // Mantém todos os containers com a mesma largura
+        width: 100,
         padding: EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: selectedBet == amount ? Colors.green : Colors.transparent,
-          border: Border.all(color: selectedBet == amount ? Colors.green : Colors.grey, width: 2.0),
+          border: Border.all(
+            color: selectedBet == amount ? Colors.green : Colors.grey,
+            width: 2.0,
+          ),
           borderRadius: BorderRadius.circular(10),
         ),
         child: FittedBox(

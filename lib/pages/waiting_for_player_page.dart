@@ -16,7 +16,6 @@ class _WaitingForPlayerPageState extends State<WaitingForPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Define o caminho da imagem do jogo com base no título do jogo
     String gameImagePath;
     switch (widget.gameTitle.toLowerCase()) {
       case 'dama':
@@ -50,27 +49,33 @@ class _WaitingForPlayerPageState extends State<WaitingForPlayerPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Linha para alinhar os círculos dos usuários e a imagem do jogo
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Bolinha do usuário verde do lado esquerdo
                   CircleAvatar(
-                    radius: 40, // Tamanho do círculo do usuário
+                    radius: 40,
                     backgroundColor: Colors.green,
                     child: Icon(Icons.person, color: Colors.white, size: 40),
                   ),
                   SizedBox(width: 20),
                   Column(
                     children: [
-                      // Imagem do jogo no meio
+                      // Adicionar o nome do jogo em negrito acima da imagem do jogo com animação
+                      Text(
+                        widget.gameTitle,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ).animate().fadeIn(duration: 1000.ms).slide(),
+                      SizedBox(height: 10),
                       Image.asset(
                         gameImagePath,
                         width: 100,
                         height: 100,
-                      ).animate().fadeIn(duration: 1000.ms).slide(), // Animação de fade e slide
+                      ).animate().fadeIn(duration: 1000.ms).slide(),
                       SizedBox(height: 20),
-                      // Texto de aguardando jogador
                       Text(
                         'Aguardando...',
                         style: TextStyle(color: Colors.white, fontSize: 16),
@@ -79,12 +84,11 @@ class _WaitingForPlayerPageState extends State<WaitingForPlayerPage> {
                     ],
                   ),
                   SizedBox(width: 20),
-                  // Bolinha do usuário vermelho do lado direito (inicialmente invisível)
                   AnimatedOpacity(
                     opacity: _isRedPlayerVisible ? 1.0 : 0.0,
                     duration: Duration(milliseconds: 500),
                     child: CircleAvatar(
-                      radius: 40, // Tamanho do círculo do outro jogador
+                      radius: 40,
                       backgroundColor: Colors.red,
                       child: Icon(Icons.person, color: Colors.white, size: 40),
                     ),
@@ -94,13 +98,11 @@ class _WaitingForPlayerPageState extends State<WaitingForPlayerPage> {
               SizedBox(height: 20),
               CircularProgressIndicator(color: Colors.green),
               SizedBox(height: 20),
-              // Botão para encontrar jogador
               ElevatedButton(
                 onPressed: () {
                   setState(() {
                     _isRedPlayerVisible = true;
                   });
-                  // Aguarda 2 segundos antes de navegar para a próxima tela
                   Future.delayed(Duration(seconds: 2), () {
                     Navigator.push(
                       context,
@@ -109,7 +111,7 @@ class _WaitingForPlayerPageState extends State<WaitingForPlayerPage> {
                   });
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green, // Atualizado para usar backgroundColor
+                  backgroundColor: Colors.green,
                 ),
                 child: Text('Encontrar Jogador'),
               ),

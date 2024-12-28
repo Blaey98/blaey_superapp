@@ -30,11 +30,21 @@ class _MyAppState extends State<MyApp> {
             primarySwatch: Colors.green,
             scaffoldBackgroundColor: Colors.white,
             brightness: Brightness.light,
+            appBarTheme: AppBarTheme(
+              color: Colors.white, // Define a cor da AppBar como branca
+              iconTheme: IconThemeData(color: Colors.black), // Ícones pretos na AppBar
+              titleTextStyle: TextStyle(color: Colors.black, fontSize: 20), // Texto preto na AppBar
+            ),
           ),
           darkTheme: ThemeData(
             primarySwatch: Colors.green,
             scaffoldBackgroundColor: Colors.grey[900], // Modo escuro
             brightness: Brightness.dark,
+            appBarTheme: AppBarTheme(
+              color: Colors.grey[900], // Define a cor da AppBar como cinza escuro no modo escuro
+              iconTheme: IconThemeData(color: Colors.white), // Ícones brancos na AppBar
+              titleTextStyle: TextStyle(color: Colors.white, fontSize: 20), // Texto branco na AppBar
+            ),
           ),
           themeMode: ThemeMode.system, // Altera para o modo do sistema
           home: HomePage().animate().fadeIn(duration: Duration(seconds: 1)), // Animação de fade-in para HomePage
@@ -73,7 +83,7 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
+            color: Colors.white, // Define a cor da parte superior como branca
             height: MediaQuery.of(context).padding.top,
           ),
           Expanded(
@@ -106,7 +116,7 @@ class _HomePageState extends State<HomePage> {
         showSelectedLabels: true,
         showUnselectedLabels: true,
         iconSize: 30.0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Colors.white, // Define a cor da barra de navegação inferior como branca
         onTap: _onItemTapped,
         selectedLabelStyle: TextStyle(
           fontWeight: FontWeight.bold,
@@ -129,7 +139,7 @@ class _HomePageState extends State<HomePage> {
         color: _selectedIndex == index ? Colors.green[100] : Colors.transparent,
         borderRadius: BorderRadius.circular(16.0),
       ),
-      padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 16.0),
+      padding: EdgeInsets.symmetric(vertical: 3.0.h, horizontal: 16.0.w),
       child: Icon(
         iconData,
         size: 25.0,

@@ -1,15 +1,17 @@
-// lib/pages/notifications_page.dart
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('Notificações'),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Notificações'),
       ),
-      child: Center(
-        child: Text('Esta é a página de notificações'),
+      body: Center(
+        child: Text(
+          'Página de Notificações',
+          style: TextStyle(fontSize: 24),
+        ),
       ),
     );
   }

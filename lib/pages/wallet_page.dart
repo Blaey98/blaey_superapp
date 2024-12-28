@@ -230,7 +230,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
               children: [
                 Text(
                   'Ponto de Recarga',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold), // Aumenta o tamanho do texto
+                  style: TextStyle(fontSize: 23,), // Aumenta o tamanho do texto
                 ),
                 SizedBox(width: 3),
                 Icon(Icons.local_gas_station, color: Colors.black, size: 24),
@@ -526,13 +526,13 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
-                      width: 260,
-                      height: 260,
+                      width: 200, // Reduzido de 260
+                      height: 200, // Reduzido de 260
                       child: CircularProgressIndicator(
                         value: adsWatched / totalAds,
                         backgroundColor: Colors.grey[300], // Light grey color for the base
                         valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                        strokeWidth: 20, // Thicker progress bar
+                        strokeWidth: 15, // Reduzido de 20
                         strokeCap: StrokeCap.round, // Rounded edges for the progress bar
                       ),
                     ),
@@ -546,13 +546,13 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                         shadowDarkColorEmboss: Colors.black.withOpacity(0.7), // Inner shadow color
                       ),
                       child: Container(
-                        width: 200,
-                        height: 200,
+                        width: 140, // Reduzido de 200
+                        height: 140, // Reduzido de 200
                         alignment: Alignment.center,
                         child: Icon(
                           Icons.play_arrow_rounded,
                           color: Colors.white, // White play icon
-                          size: 100,
+                          size: 70, // Reduzido de 100
                         ),
                       ),
                     ),
