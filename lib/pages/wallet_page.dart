@@ -5,8 +5,8 @@ import 'rewarded_ad_page.dart';
 import 'bonus_page.dart';
 import 'store_page.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
-import 'upgrade_ponto_de_recarga.dart';
 import 'recarga_pro.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class WalletPage extends StatefulWidget {
   @override
@@ -23,7 +23,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
   bool isWatchingAd = false;
   bool isAtCheckpoint = false;
   bool showLevelText = false;
-  bool showCoinAnimation = false; // Controla a visibilidade da animação "+1,00"
+  bool showCoinAnimation = false;
   late AnimationController _progressController;
   late AnimationController _coinController;
   late AnimationController _balanceController;
@@ -33,11 +33,14 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
   late Animation<Color?> _balanceColorAnimation;
   late Animation<double> _flashAnimation;
 
+  final AudioPlayer _audioPlayer = AudioPlayer(); // Adiciona o AudioPlayer
+  final AudioCache _audioCache = AudioCache(prefix: 'assets/som/'); // Adiciona o AudioCache
+
   static const int level1Ads = 4;
   static const int level2Ads = 6;
   static const int level3Ads = 8;
-  static const int checkpointDelaySeconds = 30; // 30 seconds delay at each checkpoint
-  static const int regressionIntervalSeconds = 60; // 60 seconds regression interval
+  static const int checkpointDelaySeconds = 30;
+  static const int regressionIntervalSeconds = 60;
 
   @override
   void initState() {
@@ -47,7 +50,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
     // Initialize the animation controllers
     _progressController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 1000), // Slower animation for progress
+      duration: Duration(milliseconds: 1000),
     );
 
     _coinController = AnimationController(
@@ -57,7 +60,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
 
     _balanceController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 300), // Faster animation duration
+      duration: Duration(milliseconds: 300),
     );
 
     _flashController = AnimationController(
@@ -68,9 +71,12 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
     // Initialize the animations
     _progressAnimation = Tween<double>(begin: 0, end: 1).animate(_progressController);
     _coinAnimation = Tween<Offset>(begin: Offset(0, 1), end: Offset(0, -2)).animate(_coinController);
-    _balanceColorAnimation = ColorTween(begin: Colors.white, end: Colors.green)
+    _balanceColorAnimation = ColorTween(begin: Colors.black54, end: Colors.green)
         .animate(CurvedAnimation(parent: _balanceController, curve: Curves.easeInOut));
     _flashAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(_flashController);
+
+    // Pré-carregar sons
+    _audioCache.loadAll(['move_sound.mp3', 'moeda.mp3']);
 
     startProgressRegression();
   }
@@ -84,6 +90,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
     _coinController.dispose();
     _balanceController.dispose();
     _flashController.dispose();
+    _audioPlayer.dispose(); // Dispose o AudioPlayer
     super.dispose();
   }
 
@@ -111,7 +118,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
         } else if (currentLevel > 1) {
           setState(() {
             currentLevel--;
-            adsWatched = currentLevel == 2 ? level1Ads : currentLevel == 3 ? level2Ads : level3Ads; // Reset adsWatched based on the new level
+            adsWatched = currentLevel == 2 ? level1Ads : currentLevel == 3 ? level2Ads : level3Ads;
             _showLevelUpMessage("Nível $currentLevel");
           });
         }
@@ -136,6 +143,9 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
       _balanceController.forward().then((_) {
         _balanceController.reverse();
       });
+
+      // Toca o som de recompensa
+      _audioCache.play('moeda.mp3');
     });
   }
 
@@ -153,10 +163,9 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
 
     if (reward != null) {
       setState(() {
-        showCoinAnimation = true; // Mostrar a animação "+1,00"
+        showCoinAnimation = true;
 
         if (currentLevel == 3 && adsWatched >= level3Ads) {
-          // No change in adsWatched if already at max in level 3
         } else {
           adsWatched++;
         }
@@ -175,18 +184,16 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
           currentLevel = 3;
           adsWatched = 0;
         } else if (currentLevel == 3 && adsWatched >= level3Ads) {
-          // Keep the adsWatched at max and start regression
           setState(() {
             adsWatched = level3Ads;
           });
         }
 
-        // Executa a animação da moeda e atualiza o saldo quando a animação estiver concluída
         _coinController.reset();
         _coinController.forward().then((_) {
           _addReward(currentLevel.toDouble());
           setState(() {
-            showCoinAnimation = false; // Ocultar a animação "+1,00" após a conclusão
+            showCoinAnimation = false;
           });
         });
       });
@@ -223,31 +230,13 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Ponto de Recarga',
-                  style: TextStyle(fontSize: 23,), // Aumenta o tamanho do texto
-                ),
-                SizedBox(width: 3),
-                Icon(Icons.local_gas_station, color: Colors.black, size: 24),
-              ],
-            ),
-            IconButton(
-              icon: Icon(Icons.workspace_premium),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SubscriptionPage()),
-                );
-              },
-            ),
-          ],
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Carteira',
+            style: TextStyle(fontSize: 23),
+          ),
         ),
-        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -262,21 +251,21 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                   animation: _balanceColorAnimation,
                   builder: (context, child) {
                     return Container(
-                      padding: EdgeInsets.all(14),
+                      padding: EdgeInsets.all(1),
                       decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                       child: Column(
                         children: [
                           Text(
                             'Saldo atual:',
                             style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
+                              fontSize: 18,
+                              color: Colors.black54,
                             ),
                           ),
-                          SizedBox(height: 7),
+                          SizedBox(height: 0),
                           Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -290,7 +279,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                                 Text(
                                   '\$${userBalance.toStringAsFixed(2)}',
                                   style: TextStyle(
-                                    fontSize: 32,
+                                    fontSize: userBalance >= 100 ? 40 : 60,
                                     fontWeight: FontWeight.bold,
                                     color: _balanceColorAnimation.value,
                                   ),
@@ -303,8 +292,9 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                     );
                   },
                 ),
-                SizedBox(height: 20),
-                _buildBonusAndStore(context),
+                SizedBox(height: 0), // Reduz a distância entre o saldo e o bloco de imagens
+                _buildImageBlock(),
+                SizedBox(height: 1),
                 _buildRechargePoint(context),
               ],
             ),
@@ -325,7 +315,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 1),
                         Image.asset(
                           'assets/icons/moeda.png',
                           width: 40,
@@ -352,84 +342,107 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => UpgradePontoDeRecargaPage()),
-          );
-        },
-        backgroundColor: Colors.orange, // Cor dourada
-        child: Icon(
-          Icons.workspace_premium,
-          color: Colors.white, // Ícone branco
-        ),
-        elevation: 10, // Sombra
+      floatingActionButton: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RecargaProPage()),
+              );
+            },
+            backgroundColor: const Color(0xFFFFCE1F),
+            elevation: 0,
+            child: Image.asset(
+              'assets/icons/recargapro.png',
+              width: 56,
+              height: 56,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            bottom: -30,
+            right: 10,
+            child: Text(
+              'Teste Grátis',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  Widget _buildBonusAndStore(BuildContext context) {
+  Widget _buildImageBlock() {
     return Container(
-      padding: EdgeInsets.all(8),
+      padding: EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey), // Adiciona a borda
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Centraliza "Bônus" e "Loja"
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => BonusPage()),
-                  );
-                },
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.card_giftcard, size: 30, color: Colors.blue),
-                        SizedBox(width: 5),
-                        Text(
-                          'Bônus',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => StorePage(updateBalance: _addReward)),
-                  );
-                },
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.store, size: 30, color: Colors.green),
-                        SizedBox(width: 5),
-                        Text(
-                          'Loja',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          _buildIconColumn(
+            iconPath: 'assets/icons/convite.png',
+            radius: 40,
+            width: 60,
+            height: 130,
+            onTap: () {
+              // Ação para Convite
+            },
+          ),
+          SizedBox(width: 1),
+          _buildIconColumn(
+            iconPath: 'assets/icons/bonus.png',
+            radius: 73,
+            width: 180,
+            height: 200,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => BonusPage()),
+              );
+            },
+          ),
+          SizedBox(width: 1),
+          _buildIconColumn(
+            iconPath: 'assets/icons/loja.png',
+            radius: 73,
+            width: 180,
+            height: 200,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => StorePage(updateBalance: _addReward)),
+              );
+            },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIconColumn({
+    required String iconPath,
+    required double radius,
+    required double width,
+    required double height,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.transparent,
+        child: Image.asset(iconPath, width: width, height: height),
       ),
     );
   }
@@ -476,9 +489,10 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                 ),
               ],
             ),
+            SizedBox(width: 5),
             Text(
               'Período',
-              style: TextStyle(fontSize: 16), // Sem negrito e na mesma altura de Nível 1
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -496,7 +510,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                     color: Colors.green,
                   ),
                 ),
-                SizedBox(width: 2), // Diminui o espaço entre Nível e 1,00
+                SizedBox(width: 2),
                 Image.asset(
                   'assets/icons/moeda.png',
                   width: 20,
@@ -506,17 +520,17 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
             ),
             Row(
               children: [
-                Icon(Icons.schedule, size: 20), // Ícone antes de 1/4
+                Icon(Icons.schedule, size: 20),
                 SizedBox(width: 4),
                 Text(
                   '$adsWatched/$totalAds',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 24),
                 ),
               ],
             ),
           ],
         ),
-        SizedBox(height: 32),
+        SizedBox(height: 19),
         Center(
           child: GestureDetector(
             onTap: _watchAd,
@@ -526,33 +540,33 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
-                      width: 200, // Reduzido de 260
-                      height: 200, // Reduzido de 260
+                      width: 190,
+                      height: 195,
                       child: CircularProgressIndicator(
                         value: adsWatched / totalAds,
-                        backgroundColor: Colors.grey[300], // Light grey color for the base
+                        backgroundColor: Colors.grey[300],
                         valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                        strokeWidth: 15, // Reduzido de 20
-                        strokeCap: StrokeCap.round, // Rounded edges for the progress bar
+                        strokeWidth: 15,
+                        strokeCap: StrokeCap.round,
                       ),
                     ),
                     Neumorphic(
                       style: NeumorphicStyle(
                         depth: -10,
-                        color: progressColor, // Solid color for the button
+                        color: progressColor,
                         boxShape: NeumorphicBoxShape.circle(),
                         lightSource: LightSource.topLeft,
                         shadowLightColorEmboss: Colors.white,
-                        shadowDarkColorEmboss: Colors.black.withOpacity(0.7), // Inner shadow color
+                        shadowDarkColorEmboss: Colors.black.withOpacity(0.7),
                       ),
                       child: Container(
-                        width: 140, // Reduzido de 200
-                        height: 140, // Reduzido de 200
+                        width: 170,
+                        height: 170,
                         alignment: Alignment.center,
                         child: Icon(
                           Icons.play_arrow_rounded,
-                          color: Colors.white, // White play icon
-                          size: 70, // Reduzido de 100
+                          color: Colors.white,
+                          size: 120,
                         ),
                       ),
                     ),
@@ -563,92 +577,6 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
           ),
         ),
       ],
-    );
-  }
-}
-
-// Página UpgradePontoDeRecargaPage
-class UpgradePontoDeRecargaPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Upgrade Ponto de Recarga'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              'Ganhe moedas sem anúncios!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Com a Recarga Pró, você não precisa perder seu tempo com anúncios:',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            Text(
-              '- Clicou, recebeu instantaneamente!\n- Até 400 Moedas a cada 2 hrs\n- Maior conforto e tranquilidade',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 40),
-            Text(
-              'Teste grátis por 7 dias, depois R\$ 19,90/mês.',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RecargaProPage()),
-                );
-              },
-              style: ButtonStyle(
-                padding: MaterialStateProperty.all(EdgeInsets.symmetric(horizontal: 32, vertical: 16)), // Aumenta o padding do botão
-                textStyle: MaterialStateProperty.all(TextStyle(fontSize: 18)), // Aumenta o tamanho do texto
-                shape: MaterialStateProperty.all(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Bordas arredondadas
-                  ),
-                ),
-                // Degradê dourado
-                backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                      (Set<MaterialState> states) {
-                    return Colors.transparent; // Deixa transparente para aplicar o degradê
-                  },
-                ),
-                shadowColor: MaterialStateProperty.all(Colors.transparent), // Remove a sombra padrão
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFFFD700), Color(0xFFFFA500)], // Degradê do dourado para o laranja
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  child: Text(
-                    'Testar Grátis por 7 dias',
-                    style: TextStyle(color: Colors.black), // Texto preto
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -100,13 +100,28 @@ class MessagesPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Column(
                     children: [
-                      CircleAvatar(
+                      stories[index]['user'] == 'Atualize'
+                          ? CircleAvatar(
                         radius: 30,
                         backgroundColor: Colors.grey[300],
                         backgroundImage: AssetImage(stories[index]['image']),
-                        child: stories[index]['image'] == 'assets/icons/plus.png'
-                            ? Icon(Icons.add, color: Colors.black, size: 30)
-                            : null,
+                        child: Icon(Icons.add, color: Colors.black, size: 30),
+                      )
+                          : Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Colors.green, Colors.lightGreenAccent],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(3.0), // Espessura do contorno
+                        child: CircleAvatar(
+                          radius: 27,
+                          backgroundColor: Colors.grey[300],
+                          backgroundImage: AssetImage(stories[index]['image']),
+                        ),
                       ),
                       SizedBox(height: 4),
                       Text(
@@ -253,8 +268,6 @@ class ChatSecundarioPage extends StatelessWidget {
     );
   }
 }
-
-
 
 // Página de notas (exemplo)
 class NotasPage extends StatefulWidget {

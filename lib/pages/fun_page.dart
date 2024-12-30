@@ -4,7 +4,7 @@ import 'profile_page.dart' as profile; // Usar alias para evitar conflito
 import 'trophies_page.dart';
 import 'friend_profile_page.dart' as friendProfile;
 import 'store_page.dart';
-import 'waiting_for_player_page.dart';
+import 'waiting_for_player_page.dart'; // Importe a classe WaitingForPlayerPage
 import 'filter_dialog.dart'; // Importar a página de filtro
 import 'blaey_page.dart'; // Importar BlaeyPage
 

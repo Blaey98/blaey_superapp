@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+// Importações únicas
+import 'pages/gamepage_dama.dart'; // Importar a página do jogo de damas com o nome correto
 import 'pages/messages_page.dart';
 import 'pages/fun_page.dart';
 import 'pages/wallet_page.dart';
@@ -31,23 +33,23 @@ class _MyAppState extends State<MyApp> {
             scaffoldBackgroundColor: Colors.white,
             brightness: Brightness.light,
             appBarTheme: AppBarTheme(
-              color: Colors.white, // Define a cor da AppBar como branca
-              iconTheme: IconThemeData(color: Colors.black), // Ícones pretos na AppBar
-              titleTextStyle: TextStyle(color: Colors.black, fontSize: 20), // Texto preto na AppBar
+              color: Colors.white,
+              iconTheme: IconThemeData(color: Colors.black),
+              titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
             ),
           ),
           darkTheme: ThemeData(
             primarySwatch: Colors.green,
-            scaffoldBackgroundColor: Colors.grey[900], // Modo escuro
+            scaffoldBackgroundColor: Colors.grey[900],
             brightness: Brightness.dark,
             appBarTheme: AppBarTheme(
-              color: Colors.grey[900], // Define a cor da AppBar como cinza escuro no modo escuro
-              iconTheme: IconThemeData(color: Colors.white), // Ícones brancos na AppBar
-              titleTextStyle: TextStyle(color: Colors.white, fontSize: 20), // Texto branco na AppBar
+              color: Colors.grey[900],
+              iconTheme: IconThemeData(color: Colors.white),
+              titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
             ),
           ),
-          themeMode: ThemeMode.system, // Altera para o modo do sistema
-          home: HomePage().animate().fadeIn(duration: Duration(seconds: 1)), // Animação de fade-in para HomePage
+          themeMode: ThemeMode.system,
+          home: HomePage().animate().fadeIn(duration: Duration(seconds: 1)),
         );
       },
     );
@@ -83,11 +85,11 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           Container(
-            color: Colors.white, // Define a cor da parte superior como branca
+            color: Colors.white,
             height: MediaQuery.of(context).padding.top,
           ),
           Expanded(
-            child: _pages[_selectedIndex].animate().fadeIn(duration: Duration(milliseconds: 500)), // Animação de fade-in para páginas
+            child: _pages[_selectedIndex].animate().fadeIn(duration: Duration(milliseconds: 500)),
           ),
         ],
       ),
@@ -98,8 +100,8 @@ class _HomePageState extends State<HomePage> {
             label: 'Mensagem',
           ),
           BottomNavigationBarItem(
-            icon: _buildIcon(Icons.dashboard_customize_outlined, 1), // Ícone de jogo
-            label: 'Diversão', // Rótulo alterado para "Diversão"
+            icon: _buildIcon(Icons.dashboard_customize_outlined, 1),
+            label: 'Diversão',
           ),
           BottomNavigationBarItem(
             icon: _buildIcon(Icons.account_balance_wallet, 2),
@@ -111,24 +113,24 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.black87, // Preto claro para o item selecionado
+        selectedItemColor: Colors.black87,
         unselectedItemColor: Colors.black54,
         showSelectedLabels: true,
         showUnselectedLabels: true,
         iconSize: 30.0,
-        backgroundColor: Colors.white, // Define a cor da barra de navegação inferior como branca
+        backgroundColor: Colors.white,
         onTap: _onItemTapped,
         selectedLabelStyle: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 14.0,
-          color: Colors.black87, // Preto claro para o texto selecionado
+          color: Colors.black87,
         ),
         unselectedLabelStyle: TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 12.0,
         ),
         type: BottomNavigationBarType.fixed,
-        elevation: 0, // Remove a sombra abaixo do menu
+        elevation: 0,
       ),
     );
   }
@@ -145,6 +147,6 @@ class _HomePageState extends State<HomePage> {
         size: 25.0,
         color: _selectedIndex == index ? Colors.green[900] : Colors.black54,
       ),
-    ).animate().scale(duration: Duration(milliseconds: 500)); // Animação de escala para ícones
+    ).animate().scale(duration: Duration(milliseconds: 500));
   }
 }
