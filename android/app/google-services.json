@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "513721203811",
+    "project_id": "blaeysuperapp",
+    "storage_bucket": "blaeysuperapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:513721203811:android:51cf6ef6c5701a6af20c56",
+        "android_client_info": {
+          "package_name": "com.company.blaey"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkXIWvRMaSG6-b8qcpaFIcrvr4SRHba80"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
