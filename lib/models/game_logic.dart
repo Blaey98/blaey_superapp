@@ -1,32 +1,58 @@
+import 'package:blaey_app/models/position.dart' as pos;
+
 class GameLogic {
   List<List<int>> board;
   bool playerTurn;
 
   GameLogic({required this.board, required this.playerTurn});
 
-  // Factory method to initialize the game board
   factory GameLogic.initial() {
-    return GameLogic(
-      board: List.generate(8, (i) => List.generate(8, (j) {
-        if (i < 3 && (i + j) % 2 == 1) return 2; // peças azuis
-        if (i > 4 && (i + j) % 2 == 1) return 1; // peças vermelhas
-        return 0;
-      })),
-      playerTurn: true,
+    List<List<int>> initialBoard = List.generate(
+      8,
+          (i) => List.generate(
+        8,
+            (j) {
+          if (i < 3 && (i + j) % 2 == 1) return 2; // Peças azuis
+          if (i > 4 && (i + j) % 2 == 1) return 1; // Peças vermelhas
+          return 0;
+        },
+      ),
     );
+    return GameLogic(board: initialBoard, playerTurn: true);
   }
 
-  // Check if the position is within the board boundaries
   bool isWithinBoard(int x, int y) {
     return x >= 0 && x < 8 && y >= 0 && y < 8;
   }
 
-  // Get possible moves for a piece at (x, y)
+  List<pos.Position> getAllMovablePieces() {
+    List<pos.Position> movablePieces = [];
+    for (int y = 0; y < 8; y++) {
+      for (int x = 0; x < 8; x++) {
+        if (board[y][x] != 0 && getPossibleMoves(x, y).isNotEmpty) {
+          movablePieces.add(pos.Position(x, y));
+        }
+      }
+    }
+    return movablePieces;
+  }
+
+  List<pos.Position> getAllCapturingPieces() {
+    List<pos.Position> capturingPieces = [];
+    for (int y = 0; y < 8; y++) {
+      for (int x = 0; x < 8; x++) {
+        if (board[y][x] != 0 && getPossibleCaptureMoves(x, y).isNotEmpty) {
+          capturingPieces.add(pos.Position(x, y));
+        }
+      }
+    }
+    return capturingPieces;
+  }
+
   List<List<int>> getPossibleMoves(int x, int y) {
     List<List<int>> moves = [];
     int piece = board[y][x];
 
-    // Check if it's the player's turn for the piece
     if ((piece == 1 && !playerTurn) || (piece == 2 && playerTurn)) {
       return moves;
     }
@@ -34,7 +60,6 @@ class GameLogic {
     int direction = (piece == 1 || piece == 3) ? -1 : 1;
     bool isKing = piece == 3 || piece == 4;
 
-    // Normal moves
     if (isWithinBoard(x + 1, y + direction)) {
       addMoveIfValid(moves, x + 1, y + direction);
     }
@@ -42,7 +67,6 @@ class GameLogic {
       addMoveIfValid(moves, x - 1, y + direction);
     }
 
-    // Capture moves
     if (isWithinBoard(x + 2, y + 2 * direction)) {
       addCaptureMoveIfValid(moves, x, y, x + 2, y + 2 * direction);
     }
@@ -50,7 +74,6 @@ class GameLogic {
       addCaptureMoveIfValid(moves, x, y, x - 2, y + 2 * direction);
     }
 
-    // King moves
     if (isKing) {
       if (isWithinBoard(x + 1, y - direction)) {
         addMoveIfValid(moves, x + 1, y - direction);
@@ -69,14 +92,12 @@ class GameLogic {
     return moves;
   }
 
-  // Helper method to add a move if it's valid
   void addMoveIfValid(List<List<int>> moves, int x, int y) {
     if (isWithinBoard(x, y) && board[y][x] == 0) {
       moves.add([x, y]);
     }
   }
 
-  // Helper method to add a capture move if it's valid
   void addCaptureMoveIfValid(List<List<int>> moves, int startX, int startY, int endX, int endY) {
     int midX = (startX + endX) ~/ 2;
     int midY = (startY + endY) ~/ 2;
@@ -88,49 +109,39 @@ class GameLogic {
     }
   }
 
-  // Make a move and return the number of captured pieces
   int makeMove(int startX, int startY, int endX, int endY) {
     int piece = board[startY][startX];
     int capturedPieces = 0;
 
-    print('Movendo peça de (${startX}, ${startY}) para (${endX}, ${endY})');
     board[endY][endX] = piece;
     board[startY][startX] = 0;
 
-    // Capture logic
     if ((endX - startX).abs() == 2) {
       int midX = (startX + endX) ~/ 2;
       int midY = (startY + endY) ~/ 2;
-      print('Capturando peça em (${midX}, ${midY})');
       board[midY][midX] = 0;
       capturedPieces++;
     }
 
-    // King promotion
     if ((piece == 1 && endY == 0) || (piece == 2 && endY == 7)) {
       board[endY][endX] = piece + 2;
-      print('Promovendo peça em (${endX}, ${endY}) para rei');
     }
 
-    // If there are more captures possible, do not change turn
+    // Check for additional captures
     if ((endX - startX).abs() == 2 && getPossibleCaptureMoves(endX, endY).isNotEmpty) {
       return capturedPieces;
     }
 
-    // Toggle player turn
     playerTurn = !playerTurn;
-    print('Turno do jogador: ${playerTurn ? "vermelho" : "azul"}');
     return capturedPieces;
   }
 
-  // Get possible capture moves for a piece at (x, y)
   List<List<int>> getPossibleCaptureMoves(int x, int y) {
     List<List<int>> captureMoves = [];
     int piece = board[y][x];
     int direction = (piece == 1 || piece == 3) ? -1 : 1;
     bool isKing = piece == 3 || piece == 4;
 
-    // Capture moves
     if (isWithinBoard(x + 2, y + 2 * direction)) {
       addCaptureMoveIfValid(captureMoves, x, y, x + 2, y + 2 * direction);
     }
@@ -138,7 +149,6 @@ class GameLogic {
       addCaptureMoveIfValid(captureMoves, x, y, x - 2, y + 2 * direction);
     }
 
-    // King capture moves
     if (isKing) {
       if (isWithinBoard(x + 2, y - 2 * direction)) {
         addCaptureMoveIfValid(captureMoves, x, y, x + 2, y - 2 * direction);

@@ -155,7 +155,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
         _formatDuration(duration),
         style: TextStyle(
           color: isActive ? Colors.white : Colors.black,
-          fontSize: 14, // Menor tamanho do texto
+          fontSize: 14,
         ),
       ),
     );
@@ -181,7 +181,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4), // Menos arredondado
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
               onPressed: () {
@@ -298,42 +298,28 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
     // Lógica para voltar e ver a jogada anterior
   }
 
-  Widget _buildPlayerInfo(String name, String imagePath, bool isActive, Duration timer) {
+  Widget _buildPlayerInfo(String name, String imagePath, bool isActive) {
     return Row(
       children: [
         Column(
           children: [
-            _buildTimerDisplay(timer, isActive), // Temporizador acima do nome
-            SizedBox(height: 8),
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundImage: AssetImage(imagePath),
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isActive ? Colors.green : Colors.transparent, // Green border if active, otherwise transparent
+                  width: 4,
                 ),
-                if (isActive)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: FadeTransition(
-                      opacity: _animationController,
-                      child: Container(
-                        width: 15,
-                        height: 15,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+              ),
+              child: CircleAvatar(
+                radius: 30,
+                backgroundImage: AssetImage(imagePath),
+              ),
             ),
             SizedBox(height: 8),
             Text(
               name,
-              style: TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: Colors.white, fontSize: 14), // Smaller font size
             ),
           ],
         ),
@@ -341,7 +327,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
           Container(
             width: 100,
             height: 100,
-            margin: EdgeInsets.only(left: 10),
+            margin: EdgeInsets.only(left: 10), // Move the meme more to the right
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
@@ -364,55 +350,26 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // space-between for aligning items to ends
                     children: [
-                      Text(
-                        'Valendo:',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        '\$${widget.betAmount}',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(width: 5),
-                      Image.asset(
-                        'assets/icons/moeda.png',
-                        width: 20,
-                        height: 20,
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.width,
-                      child: BoardWidget(
-                        gameLogic: gameLogic,
-                        onMove: _handleMove,
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  color: Colors.black,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.emoji_emotions, color: Colors.white, size: 30),
-                        onPressed: () => _sendEmoji(context),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.chat, color: Colors.white, size: 26),
-                        onPressed: _showChatDialog, // Abre o chat flutuante
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
-                        onPressed: _goBack,
+                      Row(
+                        children: [
+                          Text(
+                            'Valendo:',
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            '\$${widget.betAmount}',
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 5),
+                          Image.asset(
+                            'assets/icons/moeda.png',
+                            width: 20,
+                            height: 20,
+                          ),
+                        ],
                       ),
                       ElevatedButton(
                         onPressed: _confirmExit,
@@ -431,50 +388,129 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
                     ],
                   ),
                 ),
+                if (_capturedPieces > 0 && !gameLogic.playerTurn)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Captura',
+                          style: TextStyle(fontSize: 16, color: Colors.red),
+                        ),
+                        Text(
+                          '$_capturedPieces',
+                          style: TextStyle(fontSize: 32, color: Colors.red, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.width,
+                      child: BoardWidget(
+                        gameLogic: gameLogic,
+                        onMove: _handleMove,
+                      ),
+                    ),
+                  ),
+                ),
+                if (_capturedPieces > 0 && gameLogic.playerTurn)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Captura',
+                          style: TextStyle(fontSize: 16, color: Colors.red),
+                        ),
+                        Text(
+                          '$_capturedPieces',
+                          style: TextStyle(fontSize: 32, color: Colors.red, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                Container(
+                  color: Colors.black,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.emoji_emotions, color: Colors.white, size: 30),
+                        onPressed: () => _sendEmoji(context),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.chat, color: Colors.white, size: 26),
+                        onPressed: _showChatDialog, // Abre o chat flutuante
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                        onPressed: _goBack,
+                      ),
+                      Image.asset(
+                        'assets/icons/logoblaey.png',
+                        width: 99,
+                        height: 40,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            // Oponente posicionado na parte superior esquerda
+            // Oponente posicionado mais para baixo na parte superior esquerda
             Positioned(
-              top: 20,
+              top: 60,
               left: 20,
-              child: _buildPlayerInfo('Oponente', 'assets/icons/oponente.png', !gameLogic.playerTurn, _opponentTime),
+              child: _buildPlayerInfo('Oponente', 'assets/icons/oponente.png', !gameLogic.playerTurn),
             ),
             // Username e temporizador do jogador posicionados logo acima da barra de menu inferior
             Positioned(
               left: 20,
               bottom: 100,
-              child: _buildPlayerInfo('Username', 'assets/icons/perfil.png', gameLogic.playerTurn, _playerTime),
+              child: _buildPlayerInfo('Username', 'assets/icons/perfil.png', gameLogic.playerTurn),
             ),
-            if (_captureMessage != null)
-              Positioned(
-                right: 20,
-                top: MediaQuery.of(context).size.height / 2 - 50,
-                child: Column(
-                  children: [
-                    Text(
-                      'captura',
-                      style: TextStyle(color: Colors.red, fontSize: 16),
+            // Temporizadores na parte direita da tela
+            Positioned(
+              top: 100,
+              right: 20,
+              child: Column(
+                children: [
+                  _buildTimerDisplay(_opponentTime, !gameLogic.playerTurn),
+                  if (!gameLogic.playerTurn && _captureMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        _captureMessage!,
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                      ),
                     ),
-                    Text(
-                      '$_totalCapturedPieces',
-                      style: TextStyle(color: Colors.red, fontSize: 32, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+                ],
               ),
+            ),
+            Positioned(
+              right: 20,
+              bottom: 140,
+              child: Column(
+                children: [
+                  if (gameLogic.playerTurn && _captureMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        _captureMessage!,
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                      ),
+                    ),
+                  _buildTimerDisplay(_playerTime, gameLogic.playerTurn),
+                ],
+              ),
+            ),
             if (_captureImagePath != null)
               Positioned.fill(
                 child: ImpactCaptureOverlay(assetPath: _captureImagePath!),
               ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Image.asset(
-                'assets/icons/logoblaey.png',
-                width: 99,
-                height: 40,
-              ),
-            ),
           ],
         ),
       ),
