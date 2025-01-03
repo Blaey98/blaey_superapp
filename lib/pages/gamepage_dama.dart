@@ -4,6 +4,8 @@ import 'package:blaey_app/models/game_logic.dart';
 import 'package:blaey_app/widgets/board_widget.dart';
 import 'package:blaey_app/pages/fun_page.dart';
 import 'package:blaey_app/pages/chat_page.dart';
+import 'package:blaey_app/pages/player_won.dart'; // Import the player_won page
+import 'package:blaey_app/pages/player_lose.dart'; // Import the player_lose page
 import 'package:blaey_app/widgets/impactcaptureoverlay.dart'; // Import the ImpactCaptureOverlay widget
 
 class GamePageDama extends StatefulWidget {
@@ -57,6 +59,8 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
         if (gameLogic.playerTurn) {
           if (_playerTime > Duration(seconds: 0)) {
             _playerTime -= Duration(seconds: 1);
+          } else {
+            _endGame(false); // Player loses if time runs out
           }
         }
       });
@@ -70,6 +74,8 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
         if (!gameLogic.playerTurn) {
           if (_opponentTime > Duration(seconds: 0)) {
             _opponentTime -= Duration(seconds: 1);
+          } else {
+            _endGame(true); // Player wins if opponent's time runs out
           }
         }
       });
@@ -102,6 +108,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
       if (gameLogic.getPossibleCaptureMoves(endX, endY).isEmpty) {
         _switchPlayer();
       }
+      _checkForVictory();
     });
   }
 
@@ -138,6 +145,25 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
         _captureImagePath = null;
       });
     });
+  }
+
+  void _checkForVictory() {
+    if (gameLogic.isGameOver()) {
+      if (gameLogic.playerTurn) {
+        _endGame(true); // Player wins
+      } else {
+        _endGame(false); // Player loses
+      }
+    }
+  }
+
+  void _endGame(bool didPlayerWin) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => didPlayerWin ? PlayerWonPage() : PlayerLosePage(),
+      ),
+    );
   }
 
   String _formatDuration(Duration duration) {
@@ -216,6 +242,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
       },
     );
   }
+
 
   void _showOpponentDetails(BuildContext context) {
     showDialog(

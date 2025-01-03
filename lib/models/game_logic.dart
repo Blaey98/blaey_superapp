@@ -67,25 +67,12 @@ class GameLogic {
       addMoveIfValid(moves, x - 1, y + direction);
     }
 
-    if (isWithinBoard(x + 2, y + 2 * direction)) {
-      addCaptureMoveIfValid(moves, x, y, x + 2, y + 2 * direction);
-    }
-    if (isWithinBoard(x - 2, y + 2 * direction)) {
-      addCaptureMoveIfValid(moves, x, y, x - 2, y + 2 * direction);
-    }
-
     if (isKing) {
       if (isWithinBoard(x + 1, y - direction)) {
         addMoveIfValid(moves, x + 1, y - direction);
       }
       if (isWithinBoard(x - 1, y - direction)) {
         addMoveIfValid(moves, x - 1, y - direction);
-      }
-      if (isWithinBoard(x + 2, y - 2 * direction)) {
-        addCaptureMoveIfValid(moves, x, y, x + 2, y - 2 * direction);
-      }
-      if (isWithinBoard(x - 2, y - 2 * direction)) {
-        addCaptureMoveIfValid(moves, x, y, x - 2, y - 2 * direction);
       }
     }
 
@@ -113,26 +100,34 @@ class GameLogic {
     int piece = board[startY][startX];
     int capturedPieces = 0;
 
+    // Verifica se é um movimento de captura
+    if ((endX - startX).abs() == 2 && (endY - startY).abs() == 2) {
+      int midX = (startX + endX) ~/ 2;
+      int midY = (startY + endY) ~/ 2;
+      int opponent = board[midY][midX];
+
+      if (opponent != 0 && opponent % 2 != piece % 2) {
+        // Realiza a captura
+        board[midY][midX] = 0;
+        capturedPieces++;
+      }
+    }
+
+    // Move a peça para a nova posição
     board[endY][endX] = piece;
     board[startY][startX] = 0;
 
-    if ((endX - startX).abs() == 2) {
-      int midX = (startX + endX) ~/ 2;
-      int midY = (startY + endY) ~/ 2;
-      board[midY][midX] = 0;
-      capturedPieces++;
-    }
-
+    // Promove a peça a rei se atingir a última linha
     if ((piece == 1 && endY == 0) || (piece == 2 && endY == 7)) {
-      board[endY][endX] = piece + 2;
+      board[endY][endX] = piece + 2; // Promove a peça a dama (rei)
     }
 
-    // Check for additional captures
-    if ((endX - startX).abs() == 2 && getPossibleCaptureMoves(endX, endY).isNotEmpty) {
-      return capturedPieces;
+    // Verifica se há mais capturas disponíveis após a jogada
+    if (capturedPieces > 0 && getPossibleCaptureMoves(endX, endY).isNotEmpty) {
+      return capturedPieces; // Mantém o turno do jogador atual
     }
 
-    playerTurn = !playerTurn;
+    playerTurn = !playerTurn; // Passa o turno para o próximo jogador
     return capturedPieces;
   }
 
@@ -159,5 +154,21 @@ class GameLogic {
     }
 
     return captureMoves;
+  }
+
+  bool isGameOver() {
+    bool redHasPieces = board.any((row) => row.contains(1) || row.contains(3));
+    bool blueHasPieces = board.any((row) => row.contains(2) || row.contains(4));
+
+    // Verifica se um dos jogadores não tem movimentos possíveis
+    bool redCanMove = board.asMap().entries.any((row) =>
+        row.value.asMap().entries.any((cell) =>
+        (cell.value == 1 || cell.value == 3) && getPossibleMoves(cell.key, row.key).isNotEmpty));
+
+    bool blueCanMove = board.asMap().entries.any((row) =>
+        row.value.asMap().entries.any((cell) =>
+        (cell.value == 2 || cell.value == 4) && getPossibleMoves(cell.key, row.key).isNotEmpty));
+
+    return !redHasPieces || !blueHasPieces || !redCanMove || !blueCanMove;
   }
 }

@@ -56,6 +56,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
 
   void _selectPiece(int x, int y) {
     int piece = widget.gameLogic.board[y][x];
+    // Verifica se a peça pertence ao jogador atual
     if ((widget.gameLogic.playerTurn && (piece == 1 || piece == 3)) ||
         (!widget.gameLogic.playerTurn && (piece == 2 || piece == 4))) {
       setState(() {
@@ -87,7 +88,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
       selectedPiece = null;
       validMoves = [];
       capturePath = [];
-      highlightedCapture = null;
+      highlightedCapture = null; // Remove o destaque da casa de captura após a captura
 
       if (capturedPieces > 0) {
         _totalCapturedPieces += capturedPieces;
@@ -95,17 +96,11 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
         _showCaptureAnimation(_totalCapturedPieces);
       }
 
+      // Verifica se há mais capturas disponíveis após a jogada
       if (widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y).isNotEmpty) {
         selectedPiece = pos.Position(newPosition.x, newPosition.y);
         captureMoves = widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y);
         capturePath = captureMoves.map((move) => pos.Position(move[0], move[1])).toList();
-
-        // Highlight the capture only if the player has captured 1 or more pieces in the same turn
-        if (_totalCapturedPieces >= 1) {
-          highlightedCapture = captureMoves.isNotEmpty
-              ? pos.Position(captureMoves[0][0], captureMoves[0][1])
-              : null;
-        }
       } else {
         _totalCapturedPieces = 0;
       }
@@ -186,8 +181,10 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
     return Stack(
       children: [
         Container(
+          padding: const EdgeInsets.only(bottom: 4.0),  // Adiciona padding na borda inferior
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black),
+            color: Colors.green[700],  // Define a cor verde escuro da borda
           ),
           child: AspectRatio(
             aspectRatio: 1.0,
