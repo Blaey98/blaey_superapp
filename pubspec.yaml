@@ -62,12 +62,19 @@ flutter:
     - assets/jogos/dama_azul.png
     - assets/jogos/rei_azul.png
     - assets/jogos/rei_vermelho.png
+    - assets/jogos/rei.png
     - assets/images/fundo_preto.png
     - assets/icons/plus.png
     - assets/icons/fundo_mensagem.png
     - assets/icons/perfil.png
     - assets/icons/filter.png
-    - assets/icons/oponente.png
+    - assets/users/oponente.png
+    - assets/users/oponente1.png
+    - assets/users/oponente2.png
+    - assets/users/oponente3.png
+    - assets/users/oponente4.png
+    - assets/users/oponente5.png
+    - assets/users/oponente6.png
     - assets/icons/vs.png
     - assets/icons/trofeu.png
     - assets/meme/meme1.png
@@ -82,6 +89,24 @@ flutter:
     - assets/som/move_sound.mp3
     - assets/som/moeda.mp3
     - assets/som/captura.mp3
+    - assets/jogos/chess/peaopreto.png
+    - assets/jogos/chess/torrepreto.png
+    - assets/jogos/chess/cavalopreto.png
+    - assets/jogos/chess/bispopreto.png
+    - assets/jogos/chess/damapreto.png
+    - assets/jogos/chess/reipreto.png
+    - assets/jogos/chess/peaobranco.png
+    - assets/jogos/chess/torrebranco.png
+    - assets/jogos/chess/cavalobranco.png
+    - assets/jogos/chess/bispobranco.png
+    - assets/jogos/chess/damabranco.png
+    - assets/jogos/chess/reibranco.png
+    - assets/jogos/chess/tabuleirochess.png
+
+
+
+
+
 
 
 

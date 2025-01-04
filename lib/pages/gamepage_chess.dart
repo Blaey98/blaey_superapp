@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../models/chess_logic.dart';
+import '../widgets/chess_logic.dart';
 import '../widgets/chess_board_widget.dart';
 import 'fun_page.dart';
 import 'chat_page.dart'; // Certifique-se de que este import está correto
