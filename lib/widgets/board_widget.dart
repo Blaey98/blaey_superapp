@@ -1,33 +1,31 @@
-import 'dart:math';
-
-import 'package:flutter/material.dart';
+// lib/widgets/dama_board_widget.dart
 import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/game_logic.dart' as game_logic;
 import '../models/position.dart' as pos;
 import '../pages/player_lose.dart';
 import '../pages/player_won.dart';
 
-class BoardWidget extends StatefulWidget {
+class DamaBoardWidget extends StatefulWidget {
   final game_logic.GameLogic gameLogic;
   final void Function(int, int, int, int) onMove;
 
-  const BoardWidget({
+  const DamaBoardWidget({
     Key? key,
     required this.gameLogic,
     required this.onMove,
   }) : super(key: key);
 
   @override
-  _BoardWidgetState createState() => _BoardWidgetState();
+  _DamaBoardWidgetState createState() => _DamaBoardWidgetState();
 }
 
-class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStateMixin {
+class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProviderStateMixin {
   pos.Position? selectedPiece;
-  pos.Position? highlightedCapture;
   List<List<int>> validMoves = [];
   List<List<int>> captureMoves = [];
-  List<pos.Position> capturePath = [];
   late AnimationController _animationController;
   late Animation<double> _rotationAnimation;
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -46,7 +44,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    _rotationAnimation = Tween<double>(begin: 0, end: 2 * 3.141592653589793).animate(
+    _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.linear),
     );
     _audioCache.loadAll(['move_sound.mp3', 'moeda.mp3', 'captura.mp3']);
@@ -69,8 +67,6 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
         selectedPiece = pos.Position(x, y);
         captureMoves = widget.gameLogic.getPossibleCaptureMoves(x, y);
         validMoves = captureMoves.isNotEmpty ? captureMoves : widget.gameLogic.getPossibleMoves(x, y);
-        capturePath = captureMoves.map((move) => pos.Position(move[0], move[1])).toList();
-        highlightedCapture = null; // Reset highlighted capture
       });
     }
   }
@@ -93,8 +89,6 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
     setState(() async {
       selectedPiece = null;
       validMoves = [];
-      capturePath = [];
-      highlightedCapture = null; // Remove o destaque da casa de captura após a captura
 
       if (capturedPieces > 0) {
         _totalCapturedPieces += capturedPieces;
@@ -112,7 +106,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
       if (widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y).isNotEmpty) {
         selectedPiece = pos.Position(newPosition.x, newPosition.y);
         captureMoves = widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y);
-        capturePath = captureMoves.map((move) => pos.Position(move[0], move[1])).toList();
+        validMoves = captureMoves;
       } else {
         _totalCapturedPieces = 0;
       }
@@ -250,9 +244,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
                 bool isSelected = selectedPiece != null && selectedPiece!.x == x && selectedPiece!.y == y;
                 bool isValidMove = validMoves.any((move) => move[0] == x && move[1] == y);
                 bool isCaptureMove = captureMoves.any((move) => move[0] == x && move[1] == y);
-                bool isHighlightedCapture = highlightedCapture != null && highlightedCapture!.x == x && highlightedCapture!.y == y;
                 bool isCapturePiece = currentPlayerCapturingPieces.any((pos) => pos.x == x && pos.y == y);
-                bool isCapturePath = capturePath.any((pos) => pos.x == x && pos.y == y);
                 bool isKingAnimating = _kingPosition != null && _kingPosition!.x == x && _kingPosition!.y == y;
 
                 return GestureDetector(
@@ -276,13 +268,11 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
                   child: RepaintBoundary(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isHighlightedCapture
-                            ? Colors.red.withOpacity(0.7)
-                            : isCaptureMove
+                        color: isCaptureMove
                             ? Colors.redAccent.withOpacity(0.7)
                             : isSelected || isValidMove
                             ? Colors.lightGreenAccent.withOpacity(0.5)
-                            : isCapturePiece || isCapturePath
+                            : isCapturePiece
                             ? Colors.orangeAccent.withOpacity(0.7)
                             : (x + y) % 2 == 0
                             ? Colors.yellow

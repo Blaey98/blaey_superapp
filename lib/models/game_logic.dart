@@ -169,6 +169,10 @@ class GameLogic {
     bool redHasPieces = board.any((row) => row.contains(1) || row.contains(3));
     bool blueHasPieces = board.any((row) => row.contains(2) || row.contains(4));
 
+    if (!redHasPieces || !blueHasPieces) {
+      return true; // Jogo acabou se um dos jogadores não tem peças
+    }
+
     // Verifica se um dos jogadores não tem movimentos possíveis
     bool redCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
@@ -178,17 +182,17 @@ class GameLogic {
         row.value.asMap().entries.any((cell) =>
         (cell.value == 2 || cell.value == 4) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
 
-    return !redHasPieces || !blueHasPieces || !redCanMove || !blueCanMove;
+    return !redCanMove || !blueCanMove; // Jogo acabou se um dos jogadores não pode se mover
   }
 
   int? getWinner() {
     bool redHasPieces = board.any((row) => row.contains(1) || row.contains(3));
     bool blueHasPieces = board.any((row) => row.contains(2) || row.contains(4));
 
-    if (!redHasPieces || !blueHasPieces) {
-      return redHasPieces ? 1 : 2; // 1: Vermelho venceu, 2: Azul venceu
-    }
+    if (!redHasPieces) return 2; // Azul venceu
+    if (!blueHasPieces) return 1; // Vermelho venceu
 
+    // Verifica se um dos jogadores não pode se mover
     bool redCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
         (cell.value == 1 || cell.value == 3) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));

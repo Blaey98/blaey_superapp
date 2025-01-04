@@ -1,9 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import '../widgets/chess_logic.dart';
+import '../models/chess_logic.dart';
 import '../widgets/chess_board_widget.dart';
 import 'fun_page.dart';
-import 'chat_page.dart'; // Certifique-se de que este import está correto
+import 'chat_page.dart';
 
 class GamePageChess extends StatefulWidget {
   final int betAmount;
@@ -51,7 +50,7 @@ class _GamePageChessState extends State<GamePageChess> {
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => FunPage(userBalance: 100.0)), // Passando o userBalance
+                  MaterialPageRoute(builder: (context) => FunPage(userBalance: 100.0)),
                 );
               },
             ),
@@ -81,14 +80,14 @@ class _GamePageChessState extends State<GamePageChess> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4), // Menos arredondado
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => FunPage(userBalance: 100.0)), // Passando o userBalance
+                  MaterialPageRoute(builder: (context) => FunPage(userBalance: 100.0)),
                 );
               },
             ),
@@ -105,7 +104,7 @@ class _GamePageChessState extends State<GamePageChess> {
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Container(
-            height: MediaQuery.of(context).size.height * 0.6, // 60% da altura da tela
+            height: MediaQuery.of(context).size.height * 0.6,
             child: ChatPage(
               friendName: "Amigo",
               friendPhotoUrl: "assets/icons/user.png",
@@ -123,7 +122,7 @@ class _GamePageChessState extends State<GamePageChess> {
       body: SafeArea(
         child: Stack(
           children: [
-            Container(color: Colors.grey[850]), // Fundo cinza escuro
+            Container(color: Colors.grey[850]),
             Column(
               children: [
                 Padding(
@@ -169,15 +168,15 @@ class _GamePageChessState extends State<GamePageChess> {
                     children: [
                       IconButton(
                         icon: Icon(Icons.emoji_emotions, color: Colors.white, size: 30),
-                        onPressed: () {}, // Implement emoji sending
+                        onPressed: () {},
                       ),
                       IconButton(
                         icon: Icon(Icons.chat, color: Colors.white, size: 26),
-                        onPressed: _showChatDialog, // Abre o chat flutuante
+                        onPressed: _showChatDialog,
                       ),
                       IconButton(
                         icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
-                        onPressed: () {}, // Implement go back
+                        onPressed: () {},
                       ),
                       ElevatedButton(
                         onPressed: _confirmExit,

@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:blaey_app/models/game_logic.dart';
-import 'package:blaey_app/widgets/board_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:blaey_app/models/game_logic.dart'; // Import GameLogic
+import 'package:blaey_app/widgets/board_widget.dart'; // Import DamaBoardWidget
 import 'package:blaey_app/pages/fun_page.dart';
 import 'package:blaey_app/pages/chat_page.dart';
-import 'package:blaey_app/widgets/impactcaptureoverlay.dart'; // Import the ImpactCaptureOverlay widget
+import 'package:blaey_app/widgets/impactcaptureoverlay.dart'; // Overlay de captura
 
 class GamePageDama extends StatefulWidget {
   final int betAmount;
@@ -19,14 +19,9 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
   late GameLogic gameLogic;
   Timer? _playerTimer;
   Timer? _opponentTimer;
-  Timer? _memeTimer;
   Duration _playerTime = Duration(minutes: 5);
   Duration _opponentTime = Duration(minutes: 5);
-  String? _selectedMeme;
-  bool _showMeme = false;
-  late AnimationController _animationController;
-  int _capturedPieces = 0; // Track the number of captured pieces
-  int _totalCapturedPieces = 0; // Track the total number of captured pieces in a turn
+  int _capturedPieces = 0; // Peças capturadas no turno atual
   String? _captureMessage;
   String? _captureImagePath;
 
@@ -34,10 +29,6 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
   void initState() {
     super.initState();
     gameLogic = GameLogic.initial();
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
-    )..repeat(reverse: true);
     _startPlayerTimer();
   }
 
@@ -45,8 +36,6 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
   void dispose() {
     _playerTimer?.cancel();
     _opponentTimer?.cancel();
-    _memeTimer?.cancel();
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -86,39 +75,37 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
         _startOpponentTimer();
         _playerTimer?.cancel();
       }
-      // Reset total captured pieces when the turn ends
-      _totalCapturedPieces = 0;
+      _capturedPieces = 0; // Reseta as peças capturadas no turno
     });
   }
 
-  void _handleMove(int startX, int startY, int endX, int endY) {
+  void _handleMove(int fromRow, int fromCol, int toRow, int toCol) {
     setState(() {
-      int capturedPieces = gameLogic.makeMove(startX, startY, endX, endY);
-      _totalCapturedPieces += capturedPieces;
-      _capturedPieces = _totalCapturedPieces; // Update captured pieces for display
+      int capturedPieces = gameLogic.makeMove(fromRow, fromCol, toRow, toCol);
       if (capturedPieces > 0) {
-        _showCaptureOverlay(_totalCapturedPieces);
+        _capturedPieces += capturedPieces;
+        _showCaptureOverlay(_capturedPieces);
       }
-      if (gameLogic.getPossibleCaptureMoves(endX, endY).isEmpty) {
+      if (!gameLogic.getPossibleCaptureMoves(toRow, toCol).isNotEmpty) {
         _switchPlayer();
       }
     });
   }
 
-  void _showCaptureOverlay(int totalCapturedPieces) {
+  void _showCaptureOverlay(int capturedPieces) {
     String assetPath;
-    if (totalCapturedPieces == 2) {
+    if (capturedPieces == 2) {
       assetPath = 'assets/jogos/double.png';
-      _captureMessage = "captura 2";
-    } else if (totalCapturedPieces == 3) {
+      _captureMessage = "Captura 2";
+    } else if (capturedPieces == 3) {
       assetPath = 'assets/jogos/berasso.png';
-      _captureMessage = "captura 3";
-    } else if (totalCapturedPieces >= 4) {
+      _captureMessage = "Captura 3";
+    } else if (capturedPieces >= 4) {
       assetPath = 'assets/jogos/super.png';
-      _captureMessage = "captura 4+";
+      _captureMessage = "Captura 4+";
     } else {
-      assetPath = 'assets/jogos/capture.png'; // Default capture image for 1 capture
-      _captureMessage = "captura $_totalCapturedPieces";
+      assetPath = 'assets/jogos/capture.png';
+      _captureMessage = "Captura $_capturedPieces";
     }
 
     setState(() {
@@ -129,12 +116,12 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
       builder: (context) => ImpactCaptureOverlay(assetPath: assetPath),
     );
 
-    Overlay.of(context)?.insert(entry);
+    Overlay.of(context).insert(entry);
 
     Future.delayed(Duration(seconds: 1), () {
       entry.remove();
       setState(() {
-        _captureMessage = null; // Clear capture message after 1 second
+        _captureMessage = null;
         _captureImagePath = null;
       });
     });
@@ -188,7 +175,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
                 Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => FunPage(userBalance: 100.0)), // Passando o userBalance
+                  MaterialPageRoute(builder: (context) => FunPage(userBalance: 100.0)),
                 );
               },
             ),
@@ -205,7 +192,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Container(
-            height: MediaQuery.of(context).size.height * 0.6, // 60% da altura da tela
+            height: MediaQuery.of(context).size.height * 0.6,
             child: ChatPage(
               friendName: "Amigo",
               friendPhotoUrl: "assets/icons/user.png",
@@ -217,87 +204,6 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
     );
   }
 
-  void _showOpponentDetails(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Detalhes do Oponente"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: AssetImage('assets/icons/oponente.png'),
-              ),
-              SizedBox(height: 10),
-              Text("Nome do Oponente"),
-              ElevatedButton(
-                onPressed: () {
-                  // Lógica para adicionar como amigo
-                },
-                child: Text("Adicionar como Amigo"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text("Fechar"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _sendEmoji(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height / 2,
-          color: Colors.grey[900],
-          child: GridView.builder(
-            padding: EdgeInsets.all(8.0),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 8.0,
-              mainAxisSpacing: 8.0,
-            ),
-            itemCount: 5,
-            itemBuilder: (BuildContext context, int index) {
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedMeme = 'assets/meme/meme${index + 1}.png';
-                    _showMeme = true;
-                  });
-                  Navigator.pop(context); // Fechar o modal
-
-                  // Mostrar o meme por 3 segundos
-                  _memeTimer?.cancel();
-                  _memeTimer = Timer(Duration(seconds: 3), () {
-                    setState(() {
-                      _showMeme = false;
-                    });
-                  });
-                },
-                child: Image.asset('assets/meme/meme${index + 1}.png'),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  void _goBack() {
-    // Lógica para voltar e ver a jogada anterior
-  }
-
   Widget _buildPlayerInfo(String name, String imagePath, bool isActive) {
     return Row(
       children: [
@@ -307,7 +213,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isActive ? Colors.green : Colors.transparent, // Green border if active, otherwise transparent
+                  color: isActive ? Colors.green : Colors.transparent,
                   width: 4,
                 ),
               ),
@@ -319,21 +225,10 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
             SizedBox(height: 8),
             Text(
               name,
-              style: TextStyle(color: Colors.white, fontSize: 14), // Smaller font size
+              style: TextStyle(color: Colors.white, fontSize: 14),
             ),
           ],
         ),
-        if (_showMeme && _selectedMeme != null)
-          Container(
-            width: 100,
-            height: 100,
-            margin: EdgeInsets.only(left: 10), // Move the meme more to the right
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Image.asset(_selectedMeme!, fit: BoxFit.cover),
-          ),
       ],
     );
   }
@@ -350,7 +245,7 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // space-between for aligning items to ends
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
@@ -388,67 +283,35 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
                     ],
                   ),
                 ),
-                if (_capturedPieces > 0 && !gameLogic.playerTurn)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Captura',
-                          style: TextStyle(fontSize: 16, color: Colors.red),
-                        ),
-                        Text(
-                          '$_capturedPieces',
-                          style: TextStyle(fontSize: 32, color: Colors.red, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
                 Expanded(
                   child: Center(
                     child: Container(
                       width: MediaQuery.of(context).size.width,
                       height: MediaQuery.of(context).size.width,
-                      child: BoardWidget(
+                      child: DamaBoardWidget(
                         gameLogic: gameLogic,
                         onMove: _handleMove,
                       ),
                     ),
                   ),
                 ),
-                if (_capturedPieces > 0 && gameLogic.playerTurn)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Captura',
-                          style: TextStyle(fontSize: 16, color: Colors.red),
-                        ),
-                        Text(
-                          '$_capturedPieces',
-                          style: TextStyle(fontSize: 32, color: Colors.red, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
                 Container(
-                  color: Colors.black,
+                  color: Colors.black, // Menu inferior preto
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
                         icon: Icon(Icons.emoji_emotions, color: Colors.white, size: 30),
-                        onPressed: () => _sendEmoji(context),
+                        onPressed: () {}, // Implementar envio de emojis
                       ),
                       IconButton(
                         icon: Icon(Icons.chat, color: Colors.white, size: 26),
-                        onPressed: _showChatDialog, // Abre o chat flutuante
+                        onPressed: _showChatDialog,
                       ),
                       IconButton(
                         icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
-                        onPressed: _goBack,
+                        onPressed: () {}, // Implementar voltar jogada
                       ),
                       Image.asset(
                         'assets/icons/logoblaey.png',
@@ -460,19 +323,16 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
                 ),
               ],
             ),
-            // Oponente posicionado mais para baixo na parte superior esquerda
             Positioned(
               top: 60,
               left: 20,
               child: _buildPlayerInfo('Oponente', 'assets/icons/oponente.png', !gameLogic.playerTurn),
             ),
-            // Username e temporizador do jogador posicionados logo acima da barra de menu inferior
             Positioned(
               left: 20,
               bottom: 100,
               child: _buildPlayerInfo('Username', 'assets/icons/perfil.png', gameLogic.playerTurn),
             ),
-            // Temporizadores na parte direita da tela
             Positioned(
               top: 100,
               right: 20,
