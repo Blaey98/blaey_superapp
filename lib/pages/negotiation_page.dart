@@ -1,7 +1,7 @@
-// lib/pages/negotiation_page.dart
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:blaey_app/pages/gamepage_dama.dart'; // Certifique-se de importar a classe GamePageDama corretamente
+
+import 'package:flutter/material.dart';
+import 'package:blaey_app/pages/gamepage_dama.dart';
 import 'gamepage_ludo.dart';
 import 'gamepage_truco.dart';
 import 'gamepage_jogo_da_velha.dart';
@@ -17,19 +17,18 @@ class NegotiationPage extends StatefulWidget {
 }
 
 class _NegotiationPageState extends State<NegotiationPage> {
-  int initialBet = 2; // Valor inicial da aposta ajustado para 2,00 (1,00 por jogador)
-  int additionalBet = 0; // Valor adicional das apostas
-  int timeLeft = 15; // Tempo para negociação
-  int userBalance = 100; // Saldo atual do usuário
-  int? selectedBet; // Valor da aposta selecionada
-  String betStatus = "Aposta Inicial"; // Status da aposta
-  bool showAcceptRejectButtons = false; // Controle para mostrar botões de aceitar/rejeitar
-  Timer? _timer; // Timer para controle do piscar
+  int initialBet = 2;
+  int additionalBet = 0;
+  int timeLeft = 15;
+  int userBalance = 100;
+  int? selectedBet;
+  String betStatus = "Aposta Inicial";
+  bool showAcceptRejectButtons = false;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    // Iniciar contagem regressiva
     startTimer();
   }
 
@@ -61,19 +60,18 @@ class _NegotiationPageState extends State<NegotiationPage> {
   void _confirmBet() {
     setState(() {
       additionalBet += selectedBet!;
-      betStatus = "Apostar?"; // Mudar status quando a oferta é feita
-      showAcceptRejectButtons = true; // Mostrar botões de aceitar/rejeitar
+      betStatus = "Apostar?";
+      showAcceptRejectButtons = true;
       selectedBet = null;
     });
   }
 
   void _opponentAcceptBet() {
     setState(() {
-      betStatus = "Aposta feita!"; // Mudar status quando o oponente aceita
-      showAcceptRejectButtons = false; // Esconder botões de aceitar/rejeitar
+      betStatus = "Aposta feita!";
+      showAcceptRejectButtons = false;
     });
 
-    // Aguardar 1 segundo e mostrar a tela de prontidão
     Future.delayed(Duration(seconds: 1), () {
       _showReadyScreen();
     });
@@ -82,8 +80,8 @@ class _NegotiationPageState extends State<NegotiationPage> {
   void _rejectBet() {
     setState(() {
       selectedBet = null;
-      showAcceptRejectButtons = false; // Esconder botões de aceitar/rejeitar
-      betStatus = "Aposta Inicial"; // Restaurar status inicial
+      showAcceptRejectButtons = false;
+      betStatus = "Aposta Inicial";
     });
   }
 
@@ -96,36 +94,34 @@ class _NegotiationPageState extends State<NegotiationPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Calcula o valor total da aposta e o valor individual
     int totalBetAmount = initialBet + additionalBet * 2;
     int individualBetAmount = (initialBet / 2).toInt() + additionalBet;
 
     return Scaffold(
       body: Container(
-        color: Color(0xFF16D735), // Fundo verde (#16D735)
-        width: double.infinity, // Garantir que a largura ocupe toda a tela
-        height: double.infinity, // Garantir que a altura ocupe toda a tela
+        color: Color(0xFF16D735),
+        width: double.infinity,
+        height: double.infinity,
         child: Stack(
           children: [
-            // Relógio no topo esquerdo
             Positioned(
               top: 20,
               left: 20,
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.white, // Fundo branco
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.timer, color: Colors.grey[850], size: 20), // Ícone de relógio preto claro
+                    Icon(Icons.timer, color: Colors.grey[850], size: 20),
                     SizedBox(width: 5),
                     Text(
                       '$timeLeft s',
                       style: TextStyle(
                         fontSize: 20,
-                        color: timeLeft <= 3 ? Colors.red : Colors.black, // Texto preto, vermelho nos últimos 3 segundos
+                        color: timeLeft <= 3 ? Colors.red : Colors.black,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -133,22 +129,21 @@ class _NegotiationPageState extends State<NegotiationPage> {
                 ),
               ),
             ),
-            // Saldo atual no topo direito (sem o texto "Saldo")
             Positioned(
               top: 20,
               right: 20,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Padding do saldo
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white, // Fundo branco
-                  border: Border.all(color: Colors.white), // Borda branca
+                  color: Colors.white,
+                  border: Border.all(color: Colors.white),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
                     Text(
                       '$userBalance',
-                      style: TextStyle(fontSize: 20, color: Colors.black), // Texto preto
+                      style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     SizedBox(width: 5),
                     Image.asset('assets/icons/moeda.png', width: 24, height: 24),
@@ -156,7 +151,6 @@ class _NegotiationPageState extends State<NegotiationPage> {
                 ),
               ),
             ),
-            // Aposta inicial e valor 2,00 no topo abaixo do temporizador e saldo
             Positioned(
               top: 120,
               left: 0,
@@ -181,32 +175,31 @@ class _NegotiationPageState extends State<NegotiationPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 5), // Diminuir a distância entre o texto "Aposta Inicial" e o valor "2,00"
+                  SizedBox(height: 5),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1),
-                    color: Colors.black.withOpacity(0.1), // Fundo 70% transparente
+                    color: Colors.black.withOpacity(0.1),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           '\$${totalBetAmount.toStringAsFixed(2)}',
                           style: TextStyle(
-                            fontSize: 36, // Diminuído o tamanho da fonte
-                            color: Colors.black, // Texto preto
+                            fontSize: 36,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         SizedBox(width: 5),
-                        Image.asset('assets/icons/moeda.png', width: 30, height: 30), // Aumentado o tamanho da imagem moeda.png
+                        Image.asset('assets/icons/moeda.png', width: 30, height: 30),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            // Bloco de username e oponente no topo da tela
             Positioned(
-              top: 267, // Ajustado para ficar abaixo do valor da aposta inicial
+              top: 267,
               left: 0,
               right: 0,
               child: Row(
@@ -218,16 +211,15 @@ class _NegotiationPageState extends State<NegotiationPage> {
                         radius: 50,
                         backgroundImage: AssetImage('assets/icons/perfil.png'),
                       ),
-                      SizedBox(height: 10), // Menor espaçamento entre a imagem de perfil e o nome
+                      SizedBox(height: 10),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 9), // Padding do nome de usuário
+                        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 9),
                         color: Colors.black,
                         child: Text(
                           'Username',
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                       ),
-                      // Exibir a aposta individual
                       Text(
                         '\$${individualBetAmount.toStringAsFixed(2)}',
                         style: TextStyle(fontSize: 26, color: Colors.black87),
@@ -236,7 +228,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
                   ),
                   Column(
                     children: [
-                      Image.asset('assets/jogos/${widget.gameTitle.toLowerCase()}.png', width: 100, height: 100), // Imagem do jogo dinâmico
+                      Image.asset('assets/jogos/${widget.gameTitle.toLowerCase()}.png', width: 100, height: 100),
                     ],
                   ),
                   Column(
@@ -245,16 +237,15 @@ class _NegotiationPageState extends State<NegotiationPage> {
                         radius: 50,
                         backgroundImage: AssetImage('assets/icons/oponente.png'),
                       ),
-                      SizedBox(height: 10), // Menor espaçamento entre a imagem do oponente e o nome
+                      SizedBox(height: 10),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 9), // Padding do nome do oponente
+                        padding: EdgeInsets.symmetric(horizontal: 9, vertical: 9),
                         color: Colors.black,
                         child: Text(
                           'Oponente',
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                       ),
-                      // Exibir a aposta individual
                       Text(
                         '\$${individualBetAmount.toStringAsFixed(2)}',
                         style: TextStyle(fontSize: 26, color: Colors.black87),
@@ -264,23 +255,21 @@ class _NegotiationPageState extends State<NegotiationPage> {
                 ],
               ),
             ),
-            // Bloco de apostas e ofertas no inferior da tela
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Container(
-                color: Colors.grey[850], // Preto claro
+                color: Colors.grey[850],
                 padding: EdgeInsets.all(10),
                 child: Column(
                   children: [
                     Text(
                       'Faça sua oferta:',
-                      style: TextStyle(fontSize: 14, color: Colors.white), // Texto centralizado pequeno sem negrito na cor branca
+                      style: TextStyle(fontSize: 14, color: Colors.white),
                       textAlign: TextAlign.center,
                     ),
                     if (!showAcceptRejectButtons && betStatus != "Aposta feita!") ...[
-                      // Coluna com opções de aposta
                       Column(
                         children: [
                           Row(
@@ -314,8 +303,8 @@ class _NegotiationPageState extends State<NegotiationPage> {
                             child: ElevatedButton(
                               onPressed: selectedBet != null ? _confirmBet : null,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black, // Fundo preto
-                                padding: EdgeInsets.symmetric(vertical: 29), // Padding do botão de oferta
+                                backgroundColor: Colors.black,
+                                padding: EdgeInsets.symmetric(vertical: 29),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -325,7 +314,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
                                 children: [
                                   Text(
                                     'Ofertar \$${selectedBet != null ? selectedBet!.toStringAsFixed(2) : ''}',
-                                    style: TextStyle(color: Colors.white), // Texto branco
+                                    style: TextStyle(color: Colors.white),
                                   ),
                                   SizedBox(width: 10),
                                   Image.asset('assets/icons/moeda.png', width: 34, height: 34),
@@ -341,7 +330,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
                         onPressed: _opponentAcceptBet,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
-                          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 45), // Padding do botão de aceitar
+                          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 45),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -353,7 +342,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
                         onPressed: _rejectBet,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
-                          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 45), // Padding do botão de rejeitar
+                          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 45),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -376,11 +365,11 @@ class _NegotiationPageState extends State<NegotiationPage> {
       onTap: () => _selectBet(amount),
       child: Container(
         width: 90,
-        padding: EdgeInsets.all(8), // Padding das opções de aposta
+        padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: selectedBet == amount ? Colors.black : Colors.transparent, // Fundo preto se selecionado
+          color: selectedBet == amount ? Colors.black : Colors.transparent,
           border: Border.all(
-            color: selectedBet == amount ? Colors.black : Colors.black12, // Borda preta
+            color: selectedBet == amount ? Colors.black : Colors.black12,
             width: 2.0,
           ),
           borderRadius: BorderRadius.circular(10),
@@ -390,7 +379,7 @@ class _NegotiationPageState extends State<NegotiationPage> {
             '+\$${amount.toStringAsFixed(2)}',
             style: TextStyle(
               fontSize: 11,
-              color: selectedBet == amount ? Colors.white : Colors.white, // Texto branco
+              color: selectedBet == amount ? Colors.white : Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -423,8 +412,8 @@ class _ReadyScreenState extends State<ReadyScreen> with SingleTickerProviderStat
     );
 
     _animation = Tween<Offset>(
-      begin: Offset(0, -1), // Começa fora da tela na parte de cima
-      end: Offset(0, 0), // Termina no centro da tela
+      begin: Offset(0, -1),
+      end: Offset(0, 0),
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.elasticOut,
@@ -432,7 +421,6 @@ class _ReadyScreenState extends State<ReadyScreen> with SingleTickerProviderStat
 
     _animationController.forward();
 
-    // Navegar para a página do jogo após 2 segundos
     Future.delayed(Duration(seconds: 2), () {
       _startGame();
     });
@@ -448,22 +436,22 @@ class _ReadyScreenState extends State<ReadyScreen> with SingleTickerProviderStat
     Widget gamePage;
     switch (widget.gameTitle.toLowerCase()) {
       case 'dama':
-        gamePage = GamePageDama(betAmount: widget.totalBetAmount);
+        gamePage = GamePageDama(betAmount: widget.totalBetAmount.toDouble());
         break;
       case 'xadrez':
-        gamePage = GamePageChess(betAmount: widget.totalBetAmount);
+        gamePage = GamePageChess(betAmount: widget.totalBetAmount.toInt());
         break;
       case 'ludo':
-        gamePage = GamePageLudo(betAmount: widget.totalBetAmount);
+        gamePage = GamePageLudo(betAmount: widget.totalBetAmount.toInt());
         break;
       case 'truco':
-        gamePage = GamePageTruco(betAmount: widget.totalBetAmount);
+        gamePage = GamePageTruco(betAmount: widget.totalBetAmount.toInt());
         break;
       case 'jogo da velha':
-        gamePage = GamePageJogoDaVelha(betAmount: widget.totalBetAmount);
+        gamePage = GamePageJogoDaVelha(betAmount: widget.totalBetAmount.toInt());
         break;
       default:
-        gamePage = GamePageDama(betAmount: widget.totalBetAmount);
+        gamePage = GamePageDama(betAmount: widget.totalBetAmount.toDouble());
         break;
     }
     Navigator.pushReplacement(
@@ -475,7 +463,7 @@ class _ReadyScreenState extends State<ReadyScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF16D735), // Fundo verde
+      backgroundColor: Color(0xFF16D735),
       body: Center(
         child: SlideTransition(
           position: _animation,

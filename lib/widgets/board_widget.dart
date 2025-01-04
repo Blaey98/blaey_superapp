@@ -1,8 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/game_logic.dart' as game_logic;
 import '../models/position.dart' as pos;
+import '../pages/player_lose.dart';
+import '../pages/player_won.dart';
 
 class BoardWidget extends StatefulWidget {
   final game_logic.GameLogic gameLogic;
@@ -25,7 +29,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
   List<List<int>> captureMoves = [];
   List<pos.Position> capturePath = [];
   late AnimationController _animationController;
-  late Animation<double> _opacityAnimation;
+  late Animation<double> _rotationAnimation;
   final AudioPlayer _audioPlayer = AudioPlayer();
   final AudioCache _audioCache = AudioCache(prefix: 'assets/som/');
 
@@ -33,16 +37,18 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
   int _totalCapturedPieces = 0;
   Timer? _captureTimer;
   String? _captureImagePath;
+  pos.Position? _kingPosition;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
       vsync: this,
-      duration: const Duration(seconds: 1),
     );
-    _opacityAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeInOut);
-    _animationController.repeat(reverse: true);
+    _rotationAnimation = Tween<double>(begin: 0, end: 2 * 3.141592653589793).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.linear),
+    );
     _audioCache.loadAll(['move_sound.mp3', 'moeda.mp3', 'captura.mp3']);
   }
 
@@ -96,6 +102,12 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
         _showCaptureAnimation(_totalCapturedPieces);
       }
 
+      // Verifica se a peça foi promovida a rei
+      if ((widget.gameLogic.board[newPosition.y][newPosition.x] == 3 || widget.gameLogic.board[newPosition.y][newPosition.x] == 4) &&
+          (newPosition.y == 0 || newPosition.y == 7)) {
+        _showKingAnimation(newPosition);
+      }
+
       // Verifica se há mais capturas disponíveis após a jogada
       if (widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y).isNotEmpty) {
         selectedPiece = pos.Position(newPosition.x, newPosition.y);
@@ -104,6 +116,16 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
       } else {
         _totalCapturedPieces = 0;
       }
+
+      if (widget.gameLogic.isGameOver()) {
+        int? winner = widget.gameLogic.getWinner();
+        if (winner != null) {
+          _navigateToEndScreen(winner);
+        }
+      } else if (!widget.gameLogic.playerTurn) {
+        // Se for a vez do bot, faz o movimento do bot
+        _makeBotMove();
+      }
     });
 
     widget.onMove(startX, startY, newPosition.x, newPosition.y);
@@ -111,8 +133,6 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
 
   void _showCaptureAnimation(int totalCapturedPieces) {
     setState(() {
-      _capturedPieces = totalCapturedPieces;
-
       if (totalCapturedPieces == 2) {
         _captureImagePath = 'assets/jogos/double.png';
       } else if (totalCapturedPieces == 3) {
@@ -129,43 +149,74 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
     _captureTimer?.cancel();
     _captureTimer = Timer(Duration(seconds: 2), () {
       setState(() {
-        _capturedPieces = 0;
         _captureImagePath = null;
       });
     });
   }
 
-  Widget _buildPiece(int piece) {
-    if (piece == 1) {
-      return SizedBox.expand(
-        child: Padding(
-          padding: const EdgeInsets.all(2.0),
-          child: Image.asset('assets/jogos/dama_vermelho.png', fit: BoxFit.cover),
-        ),
-      );
-    } else if (piece == 2) {
-      return SizedBox.expand(
-        child: Padding(
-          padding: const EdgeInsets.all(2.0),
-          child: Image.asset('assets/jogos/dama_azul.png', fit: BoxFit.cover),
-        ),
-      );
-    } else if (piece == 3) {
-      return _buildKingPiece('assets/jogos/rei_vermelho.png');
-    } else if (piece == 4) {
-      return _buildKingPiece('assets/jogos/rei_azul.png');
-    } else {
-      return Container();
+  void _showKingAnimation(pos.Position position) {
+    setState(() {
+      _kingPosition = position;
+    });
+
+    _animationController.forward(from: 0.0).then((_) {
+      setState(() {
+        _kingPosition = null;
+      });
+    });
+  }
+
+  Future<void> _makeBotMove() async {
+    int delay = Random().nextInt(1000) + 1000; // Aleatório entre 1000ms (1s) e 2000ms (2s)
+    await Future.delayed(Duration(milliseconds: delay));
+
+    widget.gameLogic.makeBotMove();
+    setState(() {});
+
+    if (widget.gameLogic.isGameOver()) {
+      int? winner = widget.gameLogic.getWinner();
+      if (winner != null) {
+        _navigateToEndScreen(winner);
+      }
     }
   }
 
-  Widget _buildKingPiece(String assetPath) {
-    return SizedBox.expand(
-      child: Padding(
-        padding: const EdgeInsets.all(2.0),
-        child: Image.asset(assetPath, fit: BoxFit.cover),
+  void _navigateToEndScreen(int winner) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => winner == 1 ? PlayerWonPage() : PlayerLosePage(),
       ),
     );
+  }
+
+  Widget _buildPiece(int piece, bool isKingAnimating) {
+    Widget pieceWidget;
+    if (piece == 1) {
+      pieceWidget = Image.asset('assets/jogos/dama_vermelho.png', fit: BoxFit.cover);
+    } else if (piece == 2) {
+      pieceWidget = Image.asset('assets/jogos/dama_azul.png', fit: BoxFit.cover);
+    } else if (piece == 3) {
+      pieceWidget = Image.asset('assets/jogos/rei_vermelho.png', fit: BoxFit.cover);
+    } else if (piece == 4) {
+      pieceWidget = Image.asset('assets/jogos/rei_azul.png', fit: BoxFit.cover);
+    } else {
+      pieceWidget = Container();
+    }
+
+    if (isKingAnimating) {
+      return AnimatedBuilder(
+        animation: _rotationAnimation,
+        builder: (context, child) {
+          return Transform.rotate(
+            angle: _rotationAnimation.value,
+            child: pieceWidget,
+          );
+        },
+        child: pieceWidget,
+      );
+    } else {
+      return pieceWidget;
+    }
   }
 
   @override
@@ -202,6 +253,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
                 bool isHighlightedCapture = highlightedCapture != null && highlightedCapture!.x == x && highlightedCapture!.y == y;
                 bool isCapturePiece = currentPlayerCapturingPieces.any((pos) => pos.x == x && pos.y == y);
                 bool isCapturePath = capturePath.any((pos) => pos.x == x && pos.y == y);
+                bool isKingAnimating = _kingPosition != null && _kingPosition!.x == x && _kingPosition!.y == y;
 
                 return GestureDetector(
                   onTap: () {
@@ -238,7 +290,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
                         border: isSelected ? Border.all(color: Colors.blue, width: 3) : null,
                       ),
                       child: Center(
-                        child: _buildPiece(widget.gameLogic.board[y][x]),
+                        child: _buildPiece(widget.gameLogic.board[y][x], isKingAnimating),
                       ),
                     ),
                   ),
@@ -247,16 +299,23 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
             ),
           ),
         ),
+        // Exibe a mensagem de captura no canto superior direito
+        if (_capturedPieces > 0)
+          Positioned(
+            top: 20,
+            right: 20,
+            child: Text(
+              _capturedPieces == -1 ? 'Rei!' : 'Captura: $_capturedPieces',
+              style: TextStyle(color: Colors.red, fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          ),
         if (_captureImagePath != null)
           Positioned.fill(
-            child: FadeTransition(
-              opacity: _opacityAnimation,
-              child: Center(
-                child: SizedBox(
-                  width: 400,
-                  height: 400,
-                  child: Image.asset(_captureImagePath!, fit: BoxFit.contain),
-                ),
+            child: Center(
+              child: SizedBox(
+                width: 400,
+                height: 400,
+                child: Image.asset(_captureImagePath!, fit: BoxFit.contain),
               ),
             ),
           ),

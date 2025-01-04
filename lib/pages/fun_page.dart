@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'profile_page.dart' as profile; // Usar alias para evitar conflito
+import 'profile_page.dart' as profile;
 import 'trophies_page.dart';
 import 'friend_profile_page.dart' as friendProfile;
 import 'store_page.dart';
-import 'waiting_for_player_page.dart'; // Importe a classe WaitingForPlayerPage
-import 'filter_dialog.dart'; // Importar a página de filtro
-import 'blaey_page.dart'; // Importar BlaeyPage
+import 'waiting_for_player_page.dart';
+import 'waiting_direto.dart';
+import 'filter_dialog.dart';
+import 'blaey_page.dart';
+import 'floating_dialog.dart'; // Importe a FloatingDialog
 
 class FunPage extends StatefulWidget {
   final double userBalance;
@@ -89,7 +91,7 @@ class _FunPageState extends State<FunPage> {
                         },
                         child: CircleAvatar(
                           radius: 27.r,
-                          backgroundColor: const Color(0xFFE7DFEC), // Cor de fundo do círculo
+                          backgroundColor: const Color(0xFFE7DFEC),
                           backgroundImage: AssetImage('assets/icons/perfil.png'),
                         ),
                       ),
@@ -178,24 +180,27 @@ class _FunPageState extends State<FunPage> {
                 children: [
                   Text(
                     'Sala de jogos',
-                    style: TextStyle(fontSize: 29.sp, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                    style: TextStyle(fontSize: 29.sp, fontWeight: FontWeight.bold, color: Colors.black54),
                   ),
                   Transform.translate(
                     offset: Offset(-21.w, 0),
                     child: Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white70, width: 3.0.w),
                         borderRadius: BorderRadius.circular(17.r),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green,
+                            color: Colors.white30,
                             offset: Offset(0, 1),
                             blurRadius: 1,
                           ),
                         ],
                       ),
                       child: IconButton(
-                        icon: Icon(Icons.tune_sharp, color: Colors.white),
+                        icon: Image.asset(
+                          'assets/icons/filter.png',
+                          width: 44.w,
+                          height: 44.h,
+                        ),
                         onPressed: () {
                           showDialog(
                             context: context,
@@ -239,15 +244,14 @@ class _FunPageState extends State<FunPage> {
                     String imagePath;
                     Widget nextPage;
 
-                    // Definindo os nomes e imagens dos usuários
                     if (index == 0) {
                       userName = 'Blaey';
                       imagePath = 'assets/icons/app_icon.png';
-                      nextPage = BlaeyPage(); // Página BlaeyPage para Blaey
+                      nextPage = BlaeyPage();
                     } else {
                       userName = 'username';
                       imagePath = 'assets/icons/user.png';
-                      nextPage = friendProfile.FriendProfilePage(userName); // Página FriendProfilePage para outros usuários
+                      nextPage = friendProfile.FriendProfilePage(userName);
                     }
 
                     return Padding(
@@ -309,11 +313,11 @@ class _FunPageState extends State<FunPage> {
                       padding: EdgeInsets.symmetric(horizontal: 8.w),
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WaitingForPlayerPage(gameTitle: recentGames[index]['name']!),
-                            ),
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return FloatingDialog(gameTitle: recentGames[index]['name']!);
+                            },
                           );
                         },
                         child: ClipRRect(
@@ -388,11 +392,11 @@ class _FunPageState extends State<FunPage> {
                   ];
                   return GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => WaitingForPlayerPage(gameTitle: allGames[index]['name']!),
-                        ),
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return FloatingDialog(gameTitle: allGames[index]['name']!);
+                        },
                       );
                     },
                     child: Column(

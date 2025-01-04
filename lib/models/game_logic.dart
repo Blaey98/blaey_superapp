@@ -1,10 +1,13 @@
-import 'package:blaey_app/models/position.dart' as pos;
+import 'dart:async';
+import 'dart:math';
+import 'position.dart';
 
 class GameLogic {
   List<List<int>> board;
   bool playerTurn;
+  Function(bool)? onGameEnd;
 
-  GameLogic({required this.board, required this.playerTurn});
+  GameLogic({required this.board, required this.playerTurn, this.onGameEnd});
 
   factory GameLogic.initial() {
     List<List<int>> initialBoard = List.generate(
@@ -25,24 +28,24 @@ class GameLogic {
     return x >= 0 && x < 8 && y >= 0 && y < 8;
   }
 
-  List<pos.Position> getAllMovablePieces() {
-    List<pos.Position> movablePieces = [];
+  List<Position> getAllMovablePieces() {
+    List<Position> movablePieces = [];
     for (int y = 0; y < 8; y++) {
       for (int x = 0; x < 8; x++) {
         if (board[y][x] != 0 && getPossibleMoves(x, y).isNotEmpty) {
-          movablePieces.add(pos.Position(x, y));
+          movablePieces.add(Position(x, y));
         }
       }
     }
     return movablePieces;
   }
 
-  List<pos.Position> getAllCapturingPieces() {
-    List<pos.Position> capturingPieces = [];
+  List<Position> getAllCapturingPieces() {
+    List<Position> capturingPieces = [];
     for (int y = 0; y < 8; y++) {
       for (int x = 0; x < 8; x++) {
         if (board[y][x] != 0 && getPossibleCaptureMoves(x, y).isNotEmpty) {
-          capturingPieces.add(pos.Position(x, y));
+          capturingPieces.add(Position(x, y));
         }
       }
     }
@@ -128,6 +131,12 @@ class GameLogic {
     }
 
     playerTurn = !playerTurn; // Passa o turno para o próximo jogador
+
+    // Se for a vez do bot, faz o movimento do bot
+    if (!playerTurn) {
+      makeBotMove();
+    }
+
     return capturedPieces;
   }
 
@@ -163,12 +172,68 @@ class GameLogic {
     // Verifica se um dos jogadores não tem movimentos possíveis
     bool redCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
-        (cell.value == 1 || cell.value == 3) && getPossibleMoves(cell.key, row.key).isNotEmpty));
+        (cell.value == 1 || cell.value == 3) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
 
     bool blueCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
-        (cell.value == 2 || cell.value == 4) && getPossibleMoves(cell.key, row.key).isNotEmpty));
+        (cell.value == 2 || cell.value == 4) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
 
     return !redHasPieces || !blueHasPieces || !redCanMove || !blueCanMove;
+  }
+
+  int? getWinner() {
+    bool redHasPieces = board.any((row) => row.contains(1) || row.contains(3));
+    bool blueHasPieces = board.any((row) => row.contains(2) || row.contains(4));
+
+    if (!redHasPieces || !blueHasPieces) {
+      return redHasPieces ? 1 : 2; // 1: Vermelho venceu, 2: Azul venceu
+    }
+
+    bool redCanMove = board.asMap().entries.any((row) =>
+        row.value.asMap().entries.any((cell) =>
+        (cell.value == 1 || cell.value == 3) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
+
+    bool blueCanMove = board.asMap().entries.any((row) =>
+        row.value.asMap().entries.any((cell) =>
+        (cell.value == 2 || cell.value == 4) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
+
+    if (!redCanMove) return 2; // Azul venceu
+    if (!blueCanMove) return 1; // Vermelho venceu
+
+    return null; // Jogo ainda não terminou
+  }
+
+  void makeBotMove() {
+    int delay = Random().nextInt(1000) + 1000; // Aleatório entre 1000ms (1s) e 2000ms (2s)
+    Future.delayed(Duration(milliseconds: delay), () {
+      List<Position> capturingPieces = getAllCapturingPieces();
+      if (capturingPieces.isNotEmpty) {
+        Position piece = capturingPieces.first;
+        List<List<int>> captureMoves = getPossibleCaptureMoves(piece.x, piece.y);
+        if (captureMoves.isNotEmpty) {
+          List<int> move = captureMoves.first;
+          makeMove(piece.x, piece.y, move[0], move[1]);
+          return;
+        }
+      }
+
+      List<Position> movablePieces = getAllMovablePieces();
+      if (movablePieces.isNotEmpty) {
+        Position piece = movablePieces.first;
+        List<List<int>> moves = getPossibleMoves(piece.x, piece.y);
+        if (moves.isNotEmpty) {
+          List<int> move = moves.first;
+          makeMove(piece.x, piece.y, move[0], move[1]);
+        }
+      }
+
+      // Verifica se o jogo acabou
+      if (isGameOver()) {
+        int? winner = getWinner();
+        if (onGameEnd != null && winner != null) {
+          onGameEnd!(winner == 1); // 1: Jogador venceu, 2: Bot venceu
+        }
+      }
+    });
   }
 }
