@@ -1,4 +1,3 @@
-// lib/widgets/dama_board_widget.dart
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -22,16 +21,15 @@ class DamaBoardWidget extends StatefulWidget {
   _DamaBoardWidgetState createState() => _DamaBoardWidgetState();
 }
 
-class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProviderStateMixin {
+class _DamaBoardWidgetState extends State<DamaBoardWidget> with TickerProviderStateMixin {
   pos.Position? selectedPiece;
   List<List<int>> validMoves = [];
   List<List<int>> captureMoves = [];
   late AnimationController _animationController;
   late Animation<double> _rotationAnimation;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  late Animation<double> _jumpAnimation;
   final AudioCache _audioCache = AudioCache(prefix: 'assets/som/');
 
-  int _capturedPieces = 0;
   int _totalCapturedPieces = 0;
   Timer? _captureTimer;
   String? _captureImagePath;
@@ -47,6 +45,9 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
     _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.linear),
     );
+    _jumpAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _audioCache.loadAll(['move_sound.mp3', 'moeda.mp3', 'captura.mp3']);
   }
 
@@ -54,13 +55,11 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
   void dispose() {
     _animationController.dispose();
     _captureTimer?.cancel();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
   void _selectPiece(int x, int y) {
     int piece = widget.gameLogic.board[y][x];
-    // Verifica se a peça pertence ao jogador atual
     if ((widget.gameLogic.playerTurn && (piece == 1 || piece == 3)) ||
         (!widget.gameLogic.playerTurn && (piece == 2 || piece == 4))) {
       setState(() {
@@ -86,23 +85,21 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
 
     await _audioCache.play('move_sound.mp3');
 
-    setState(() async {
+    setState(() {
       selectedPiece = null;
       validMoves = [];
 
       if (capturedPieces > 0) {
         _totalCapturedPieces += capturedPieces;
-        await _audioCache.play('captura.mp3');
+        _audioCache.play('captura.mp3');
         _showCaptureAnimation(_totalCapturedPieces);
       }
 
-      // Verifica se a peça foi promovida a rei
       if ((widget.gameLogic.board[newPosition.y][newPosition.x] == 3 || widget.gameLogic.board[newPosition.y][newPosition.x] == 4) &&
           (newPosition.y == 0 || newPosition.y == 7)) {
         _showKingAnimation(newPosition);
       }
 
-      // Verifica se há mais capturas disponíveis após a jogada
       if (widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y).isNotEmpty) {
         selectedPiece = pos.Position(newPosition.x, newPosition.y);
         captureMoves = widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y);
@@ -117,7 +114,6 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
           _navigateToEndScreen(winner);
         }
       } else if (!widget.gameLogic.playerTurn) {
-        // Se for a vez do bot, faz o movimento do bot
         _makeBotMove();
       }
     });
@@ -141,7 +137,7 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
     _animationController.forward(from: 0.0);
 
     _captureTimer?.cancel();
-    _captureTimer = Timer(Duration(seconds: 2), () {
+    _captureTimer = Timer(const Duration(seconds: 2), () {
       setState(() {
         _captureImagePath = null;
       });
@@ -161,7 +157,7 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
   }
 
   Future<void> _makeBotMove() async {
-    int delay = Random().nextInt(1000) + 1000; // Aleatório entre 1000ms (1s) e 2000ms (2s)
+    int delay = Random().nextInt(1000) + 1000;
     await Future.delayed(Duration(milliseconds: delay));
 
     widget.gameLogic.makeBotMove();
@@ -183,7 +179,7 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
     );
   }
 
-  Widget _buildPiece(int piece, bool isKingAnimating) {
+  Widget _buildPiece(int piece, bool isKingAnimating, String tag) {
     Widget pieceWidget;
     if (piece == 1) {
       pieceWidget = Image.asset('assets/jogos/dama_vermelho.png', fit: BoxFit.cover);
@@ -198,7 +194,7 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
     }
 
     if (isKingAnimating) {
-      return AnimatedBuilder(
+      pieceWidget = AnimatedBuilder(
         animation: _rotationAnimation,
         builder: (context, child) {
           return Transform.rotate(
@@ -208,9 +204,15 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
         },
         child: pieceWidget,
       );
-    } else {
-      return pieceWidget;
     }
+
+    return Hero(
+      tag: tag,
+      child: ScaleTransition(
+        scale: _jumpAnimation,
+        child: pieceWidget,
+      ),
+    );
   }
 
   @override
@@ -226,16 +228,16 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
     return Stack(
       children: [
         Container(
-          padding: const EdgeInsets.only(bottom: 4.0),  // Adiciona padding na borda inferior
+          padding: const EdgeInsets.only(bottom: 4.0),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black),
-            color: Colors.green[700],  // Define a cor verde escuro da borda
+            color: Colors.green[700],
           ),
           child: AspectRatio(
             aspectRatio: 1.0,
             child: GridView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
               itemCount: 64,
               itemBuilder: (context, index) {
@@ -246,6 +248,8 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
                 bool isCaptureMove = captureMoves.any((move) => move[0] == x && move[1] == y);
                 bool isCapturePiece = currentPlayerCapturingPieces.any((pos) => pos.x == x && pos.y == y);
                 bool isKingAnimating = _kingPosition != null && _kingPosition!.x == x && _kingPosition!.y == y;
+
+                String tag = 'piece-$x-$y';
 
                 return GestureDetector(
                   onTap: () {
@@ -280,7 +284,7 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
                         border: isSelected ? Border.all(color: Colors.blue, width: 3) : null,
                       ),
                       child: Center(
-                        child: _buildPiece(widget.gameLogic.board[y][x], isKingAnimating),
+                        child: _buildPiece(widget.gameLogic.board[y][x], isKingAnimating, tag),
                       ),
                     ),
                   ),
@@ -289,16 +293,6 @@ class _DamaBoardWidgetState extends State<DamaBoardWidget> with SingleTickerProv
             ),
           ),
         ),
-        // Exibe a mensagem de captura no canto superior direito
-        if (_capturedPieces > 0)
-          Positioned(
-            top: 20,
-            right: 20,
-            child: Text(
-              _capturedPieces == -1 ? 'Rei!' : 'Captura: $_capturedPieces',
-              style: TextStyle(color: Colors.red, fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
         if (_captureImagePath != null)
           Positioned.fill(
             child: Center(

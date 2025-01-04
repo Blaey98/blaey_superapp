@@ -5,6 +5,8 @@ import 'package:blaey_app/widgets/board_widget.dart'; // Import DamaBoardWidget
 import 'package:blaey_app/pages/fun_page.dart';
 import 'package:blaey_app/pages/chat_page.dart';
 import 'package:blaey_app/widgets/impactcaptureoverlay.dart'; // Overlay de captura
+import 'package:blaey_app/pages/player_won.dart'; // Import PlayerWonPage
+import 'package:blaey_app/pages/player_lose.dart'; // Import PlayerLosePage
 
 class GamePageDama extends StatefulWidget {
   final int betAmount;
@@ -89,6 +91,13 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
       if (!gameLogic.getPossibleCaptureMoves(toRow, toCol).isNotEmpty) {
         _switchPlayer();
       }
+      // Verifica se o jogo acabou
+      if (gameLogic.isGameOver()) {
+        int? winner = gameLogic.getWinner();
+        if (winner != null) {
+          _navigateToEndScreen(winner);
+        }
+      }
     });
   }
 
@@ -125,6 +134,14 @@ class _GamePageDamaState extends State<GamePageDama> with SingleTickerProviderSt
         _captureImagePath = null;
       });
     });
+  }
+
+  void _navigateToEndScreen(int winner) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => winner == 1 ? PlayerWonPage() : PlayerLosePage(),
+      ),
+    );
   }
 
   String _formatDuration(Duration duration) {
