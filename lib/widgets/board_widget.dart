@@ -1,39 +1,35 @@
-import 'dart:math';
-
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/game_logic.dart' as game_logic;
 import '../models/position.dart' as pos;
 import '../pages/player_lose.dart';
 import '../pages/player_won.dart';
 
-class BoardWidget extends StatefulWidget {
+class DamaBoardWidget extends StatefulWidget {
   final game_logic.GameLogic gameLogic;
   final void Function(int, int, int, int) onMove;
 
-  const BoardWidget({
+  const DamaBoardWidget({
     Key? key,
     required this.gameLogic,
     required this.onMove,
   }) : super(key: key);
 
   @override
-  _BoardWidgetState createState() => _BoardWidgetState();
+  _DamaBoardWidgetState createState() => _DamaBoardWidgetState();
 }
 
-class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStateMixin {
+class _DamaBoardWidgetState extends State<DamaBoardWidget> with TickerProviderStateMixin {
   pos.Position? selectedPiece;
-  pos.Position? highlightedCapture;
   List<List<int>> validMoves = [];
   List<List<int>> captureMoves = [];
-  List<pos.Position> capturePath = [];
   late AnimationController _animationController;
   late Animation<double> _rotationAnimation;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  late Animation<double> _jumpAnimation;
   final AudioCache _audioCache = AudioCache(prefix: 'assets/som/');
 
-  int _capturedPieces = 0;
   int _totalCapturedPieces = 0;
   Timer? _captureTimer;
   String? _captureImagePath;
@@ -46,8 +42,11 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    _rotationAnimation = Tween<double>(begin: 0, end: 2 * 3.141592653589793).animate(
+    _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.linear),
+    );
+    _jumpAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _audioCache.loadAll(['move_sound.mp3', 'moeda.mp3', 'captura.mp3']);
   }
@@ -56,21 +55,17 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
   void dispose() {
     _animationController.dispose();
     _captureTimer?.cancel();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
   void _selectPiece(int x, int y) {
     int piece = widget.gameLogic.board[y][x];
-    // Verifica se a peça pertence ao jogador atual
     if ((widget.gameLogic.playerTurn && (piece == 1 || piece == 3)) ||
         (!widget.gameLogic.playerTurn && (piece == 2 || piece == 4))) {
       setState(() {
         selectedPiece = pos.Position(x, y);
         captureMoves = widget.gameLogic.getPossibleCaptureMoves(x, y);
         validMoves = captureMoves.isNotEmpty ? captureMoves : widget.gameLogic.getPossibleMoves(x, y);
-        capturePath = captureMoves.map((move) => pos.Position(move[0], move[1])).toList();
-        highlightedCapture = null; // Reset highlighted capture
       });
     }
   }
@@ -90,29 +85,25 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
 
     await _audioCache.play('move_sound.mp3');
 
-    setState(() async {
+    setState(() {
       selectedPiece = null;
       validMoves = [];
-      capturePath = [];
-      highlightedCapture = null; // Remove o destaque da casa de captura após a captura
 
       if (capturedPieces > 0) {
         _totalCapturedPieces += capturedPieces;
-        await _audioCache.play('captura.mp3');
+        _audioCache.play('captura.mp3');
         _showCaptureAnimation(_totalCapturedPieces);
       }
 
-      // Verifica se a peça foi promovida a rei
       if ((widget.gameLogic.board[newPosition.y][newPosition.x] == 3 || widget.gameLogic.board[newPosition.y][newPosition.x] == 4) &&
           (newPosition.y == 0 || newPosition.y == 7)) {
         _showKingAnimation(newPosition);
       }
 
-      // Verifica se há mais capturas disponíveis após a jogada
       if (widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y).isNotEmpty) {
         selectedPiece = pos.Position(newPosition.x, newPosition.y);
         captureMoves = widget.gameLogic.getPossibleCaptureMoves(newPosition.x, newPosition.y);
-        capturePath = captureMoves.map((move) => pos.Position(move[0], move[1])).toList();
+        validMoves = captureMoves;
       } else {
         _totalCapturedPieces = 0;
       }
@@ -123,7 +114,6 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
           _navigateToEndScreen(winner);
         }
       } else if (!widget.gameLogic.playerTurn) {
-        // Se for a vez do bot, faz o movimento do bot
         _makeBotMove();
       }
     });
@@ -147,7 +137,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
     _animationController.forward(from: 0.0);
 
     _captureTimer?.cancel();
-    _captureTimer = Timer(Duration(seconds: 2), () {
+    _captureTimer = Timer(const Duration(seconds: 2), () {
       setState(() {
         _captureImagePath = null;
       });
@@ -167,7 +157,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
   }
 
   Future<void> _makeBotMove() async {
-    int delay = Random().nextInt(1000) + 1000; // Aleatório entre 1000ms (1s) e 2000ms (2s)
+    int delay = Random().nextInt(1000) + 1000;
     await Future.delayed(Duration(milliseconds: delay));
 
     widget.gameLogic.makeBotMove();
@@ -189,7 +179,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildPiece(int piece, bool isKingAnimating) {
+  Widget _buildPiece(int piece, bool isKingAnimating, String tag) {
     Widget pieceWidget;
     if (piece == 1) {
       pieceWidget = Image.asset('assets/jogos/dama_vermelho.png', fit: BoxFit.cover);
@@ -204,7 +194,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
     }
 
     if (isKingAnimating) {
-      return AnimatedBuilder(
+      pieceWidget = AnimatedBuilder(
         animation: _rotationAnimation,
         builder: (context, child) {
           return Transform.rotate(
@@ -214,9 +204,15 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
         },
         child: pieceWidget,
       );
-    } else {
-      return pieceWidget;
     }
+
+    return Hero(
+      tag: tag,
+      child: ScaleTransition(
+        scale: _jumpAnimation,
+        child: pieceWidget,
+      ),
+    );
   }
 
   @override
@@ -232,16 +228,16 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
     return Stack(
       children: [
         Container(
-          padding: const EdgeInsets.only(bottom: 4.0),  // Adiciona padding na borda inferior
+          padding: const EdgeInsets.only(bottom: 4.0),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black),
-            color: Colors.green[700],  // Define a cor verde escuro da borda
+            color: Colors.green[700],
           ),
           child: AspectRatio(
             aspectRatio: 1.0,
             child: GridView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
               itemCount: 64,
               itemBuilder: (context, index) {
@@ -250,10 +246,10 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
                 bool isSelected = selectedPiece != null && selectedPiece!.x == x && selectedPiece!.y == y;
                 bool isValidMove = validMoves.any((move) => move[0] == x && move[1] == y);
                 bool isCaptureMove = captureMoves.any((move) => move[0] == x && move[1] == y);
-                bool isHighlightedCapture = highlightedCapture != null && highlightedCapture!.x == x && highlightedCapture!.y == y;
                 bool isCapturePiece = currentPlayerCapturingPieces.any((pos) => pos.x == x && pos.y == y);
-                bool isCapturePath = capturePath.any((pos) => pos.x == x && pos.y == y);
                 bool isKingAnimating = _kingPosition != null && _kingPosition!.x == x && _kingPosition!.y == y;
+
+                String tag = 'piece-$x-$y';
 
                 return GestureDetector(
                   onTap: () {
@@ -276,13 +272,11 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
                   child: RepaintBoundary(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isHighlightedCapture
-                            ? Colors.red.withOpacity(0.7)
-                            : isCaptureMove
+                        color: isCaptureMove
                             ? Colors.redAccent.withOpacity(0.7)
                             : isSelected || isValidMove
                             ? Colors.lightGreenAccent.withOpacity(0.5)
-                            : isCapturePiece || isCapturePath
+                            : isCapturePiece
                             ? Colors.orangeAccent.withOpacity(0.7)
                             : (x + y) % 2 == 0
                             ? Colors.yellow
@@ -290,7 +284,7 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
                         border: isSelected ? Border.all(color: Colors.blue, width: 3) : null,
                       ),
                       child: Center(
-                        child: _buildPiece(widget.gameLogic.board[y][x], isKingAnimating),
+                        child: _buildPiece(widget.gameLogic.board[y][x], isKingAnimating, tag),
                       ),
                     ),
                   ),
@@ -299,16 +293,6 @@ class _BoardWidgetState extends State<BoardWidget> with SingleTickerProviderStat
             ),
           ),
         ),
-        // Exibe a mensagem de captura no canto superior direito
-        if (_capturedPieces > 0)
-          Positioned(
-            top: 20,
-            right: 20,
-            child: Text(
-              _capturedPieces == -1 ? 'Rei!' : 'Captura: $_capturedPieces',
-              style: TextStyle(color: Colors.red, fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
         if (_captureImagePath != null)
           Positioned.fill(
             child: Center(

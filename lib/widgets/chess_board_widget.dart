@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/chess_logic.dart';
 import 'chess_logic.dart'; // Certifique-se de que o caminho está correto
 
 class ChessBoardWidget extends StatefulWidget {
@@ -101,10 +102,12 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
   void _handleTap(int row, int col) {
     setState(() {
       if (selectedRow == null || selectedCol == null) {
+        // Seleciona a peça
         selectedRow = row;
         selectedCol = col;
         possibleMoves = _getPossibleMoves(row, col);
       } else {
+        // Move a peça
         widget.onMove(selectedRow!, selectedCol!, row, col);
         selectedRow = null;
         selectedCol = null;
@@ -149,45 +152,6 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
         imagePath,
         width: cellSize,
         height: cellSize,
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(ChessApp());
-}
-
-class ChessApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: ChessHomePage(),
-    );
-  }
-}
-
-class ChessHomePage extends StatefulWidget {
-  @override
-  _ChessHomePageState createState() => _ChessHomePageState();
-}
-
-class _ChessHomePageState extends State<ChessHomePage> {
-  ChessLogic chessLogic = ChessLogic.initial();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chess Game'),
-      ),
-      body: ChessBoardWidget(
-        chessLogic: chessLogic,
-        onMove: (fromRow, fromCol, toRow, toCol) {
-          setState(() {
-            chessLogic.movePiece(fromRow, fromCol, toRow, toCol);
-          });
-        },
       ),
     );
   }

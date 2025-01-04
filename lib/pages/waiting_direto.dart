@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'gamepage_dama.dart';
+import 'game_page_dama.dart';
 import 'gamepage_chess.dart';
 import 'gamepage_ludo.dart';
 import 'gamepage_truco.dart';

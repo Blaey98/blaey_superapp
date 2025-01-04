@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 // Importações únicas
-import 'pages/gamepage_dama.dart'; // Importar a página do jogo de damas com o nome correto
+import 'package:blaey_app/pages/game_page_dama.dart'; // Importar a página do jogo de damas com o nome correto
 import 'pages/messages_page.dart';
 import 'pages/fun_page.dart';
 import 'pages/wallet_page.dart';

@@ -41,7 +41,6 @@ class ChessLogic {
     String piece = board[fromRow][fromCol];
     if (piece.isEmpty) return false;
 
-    // Implement specific movement rules for each piece
     switch (piece.toLowerCase()) {
       case 'p':
         return _isValidPawnMove(fromRow, fromCol, toRow, toCol, piece);
@@ -61,9 +60,7 @@ class ChessLogic {
   }
 
   bool _isValidPawnMove(int fromRow, int fromCol, int toRow, int toCol, String piece) {
-    // Implement pawn movement rules
-    // This is a simplified version, you can add more rules for en passant, promotion, etc.
-    int direction = piece == 'P' ? -1 : 1; // White pawns move up, black pawns move down
+    int direction = piece == 'P' ? -1 : 1;
     if (fromCol == toCol && board[toRow][toCol].isEmpty) {
       if (toRow == fromRow + direction) {
         return true;
@@ -78,7 +75,6 @@ class ChessLogic {
   }
 
   bool _isValidRookMove(int fromRow, int fromCol, int toRow, int toCol) {
-    // Implement rook movement rules
     if (fromRow != toRow && fromCol != toCol) return false;
     int rowStep = (toRow - fromRow).sign;
     int colStep = (toCol - fromCol).sign;
@@ -93,14 +89,12 @@ class ChessLogic {
   }
 
   bool _isValidKnightMove(int fromRow, int fromCol, int toRow, int toCol) {
-    // Implement knight movement rules
     int rowDiff = (toRow - fromRow).abs();
     int colDiff = (toCol - fromCol).abs();
     return (rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2);
   }
 
   bool _isValidBishopMove(int fromRow, int fromCol, int toRow, int toCol) {
-    // Implement bishop movement rules
     if ((toRow - fromRow).abs() != (toCol - fromCol).abs()) return false;
     int rowStep = (toRow - fromRow).sign;
     int colStep = (toCol - fromCol).sign;
@@ -115,12 +109,10 @@ class ChessLogic {
   }
 
   bool _isValidQueenMove(int fromRow, int fromCol, int toRow, int toCol) {
-    // Implement queen movement rules
     return _isValidRookMove(fromRow, fromCol, toRow, toCol) || _isValidBishopMove(fromRow, fromCol, toRow, toCol);
   }
 
   bool _isValidKingMove(int fromRow, int fromCol, int toRow, int toCol) {
-    // Implement king movement rules
     int rowDiff = (toRow - fromRow).abs();
     int colDiff = (toCol - fromCol).abs();
     return rowDiff <= 1 && colDiff <= 1;
@@ -137,8 +129,6 @@ class ChessLogic {
   }
 
   bool isCheck(bool isWhiteTurn) {
-    // Implement check detection logic
-    // Find the king's position
     String king = isWhiteTurn ? 'K' : 'k';
     int kingRow = -1;
     int kingCol = -1;
@@ -153,7 +143,6 @@ class ChessLogic {
     }
     if (kingRow == -1 || kingCol == -1) return false;
 
-    // Check if any opponent piece can move to the king's position
     for (int row = 0; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
         if (board[row][col].isNotEmpty && ((isWhiteTurn && blackPieces.containsKey(board[row][col])) || (!isWhiteTurn && whitePieces.containsKey(board[row][col])))) {
@@ -167,10 +156,8 @@ class ChessLogic {
   }
 
   bool isCheckmate(bool isWhiteTurn) {
-    // Implement checkmate detection logic
     if (!isCheck(isWhiteTurn)) return false;
 
-    // Check if any legal move can get the king out of check
     for (int fromRow = 0; fromRow < 8; fromRow++) {
       for (int fromCol = 0; fromCol < 8; fromCol++) {
         if (board[fromRow][fromCol].isNotEmpty && ((isWhiteTurn && whitePieces.containsKey(board[fromRow][fromCol])) || (!isWhiteTurn && blackPieces.containsKey(board[fromRow][fromCol])))) {

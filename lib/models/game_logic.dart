@@ -15,8 +15,8 @@ class GameLogic {
           (i) => List.generate(
         8,
             (j) {
-          if (i < 3 && (i + j) % 2 == 1) return 2; // Peças azuis
-          if (i > 4 && (i + j) % 2 == 1) return 1; // Peças vermelhas
+          if (i < 3 && (i + j) % 2 == 1) return 2; // Blue pieces
+          if (i > 4 && (i + j) % 2 == 1) return 1; // Red pieces
           return 0;
         },
       ),
@@ -103,37 +103,43 @@ class GameLogic {
     int piece = board[startY][startX];
     int capturedPieces = 0;
 
-    // Verifica se é um movimento de captura
+    // Check if it's a capture move
     if ((endX - startX).abs() == 2 && (endY - startY).abs() == 2) {
       int midX = (startX + endX) ~/ 2;
       int midY = (startY + endY) ~/ 2;
       int opponent = board[midY][midX];
 
       if (opponent != 0 && opponent % 2 != piece % 2) {
-        // Realiza a captura
+        // Perform capture
         board[midY][midX] = 0;
         capturedPieces++;
       }
     }
 
-    // Move a peça para a nova posição
+    // Move the piece to the new position
     board[endY][endX] = piece;
     board[startY][startX] = 0;
 
-    // Promove a peça a rei se atingir a última linha
+    // Promote the piece to king if it reaches the last row
     if ((piece == 1 && endY == 0) || (piece == 2 && endY == 7)) {
-      board[endY][endX] = piece + 2; // Promove a peça a dama (rei)
+      board[endY][endX] = piece + 2; // Promote to king
     }
 
-    // Verifica se há mais capturas disponíveis após a jogada
+    // Check if there are more captures available after the move
     if (capturedPieces > 0 && getPossibleCaptureMoves(endX, endY).isNotEmpty) {
-      return capturedPieces; // Mantém o turno do jogador atual
+      return capturedPieces; // Keep the current player's turn
     }
 
-    playerTurn = !playerTurn; // Passa o turno para o próximo jogador
+    playerTurn = !playerTurn; // Switch to the next player
 
-    // Se for a vez do bot, faz o movimento do bot
-    if (!playerTurn) {
+    // Check if the game is over
+    if (isGameOver()) {
+      int? winner = getWinner();
+      if (winner != null && onGameEnd != null) {
+        onGameEnd!(winner == 1); // 1: Player wins, 2: Bot wins
+      }
+    } else if (!playerTurn) {
+      // If it's the bot's turn, make the bot move
       makeBotMove();
     }
 
@@ -169,42 +175,55 @@ class GameLogic {
     bool redHasPieces = board.any((row) => row.contains(1) || row.contains(3));
     bool blueHasPieces = board.any((row) => row.contains(2) || row.contains(4));
 
-    // Verifica se um dos jogadores não tem movimentos possíveis
+    if (!redHasPieces || !blueHasPieces) {
+      return true; // Game over if a player has no pieces
+    }
+
+    // Check if a player has no possible moves
     bool redCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
-        (cell.value == 1 || cell.value == 3) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
+        (cell.value == 1 || cell.value == 3) &&
+            (getPossibleMoves(cell.key, row.key).isNotEmpty ||
+                getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
 
     bool blueCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
-        (cell.value == 2 || cell.value == 4) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
+        (cell.value == 2 || cell.value == 4) &&
+            (getPossibleMoves(cell.key, row.key).isNotEmpty ||
+                getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
 
-    return !redHasPieces || !blueHasPieces || !redCanMove || !blueCanMove;
+    return !redCanMove || !blueCanMove; // Game over if a player cannot move
   }
 
   int? getWinner() {
     bool redHasPieces = board.any((row) => row.contains(1) || row.contains(3));
     bool blueHasPieces = board.any((row) => row.contains(2) || row.contains(4));
 
-    if (!redHasPieces || !blueHasPieces) {
-      return redHasPieces ? 1 : 2; // 1: Vermelho venceu, 2: Azul venceu
-    }
+    if (!redHasPieces) return 2; // Blue wins
+    if (!blueHasPieces) return 1; // Red wins
 
+    // Check if a player cannot move
     bool redCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
-        (cell.value == 1 || cell.value == 3) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
+        (cell.value == 1 || cell.value == 3) &&
+            (getPossibleMoves(cell.key, row.key).isNotEmpty ||
+                getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
+
 
     bool blueCanMove = board.asMap().entries.any((row) =>
         row.value.asMap().entries.any((cell) =>
-        (cell.value == 2 || cell.value == 4) && (getPossibleMoves(cell.key, row.key).isNotEmpty || getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
+        (cell.value == 2 || cell.value == 4) &&
+            (getPossibleMoves(cell.key, row.key).isNotEmpty ||
+                getPossibleCaptureMoves(cell.key, row.key).isNotEmpty)));
 
-    if (!redCanMove) return 2; // Azul venceu
-    if (!blueCanMove) return 1; // Vermelho venceu
+    if (!redCanMove) return 2; // Blue wins
+    if (!blueCanMove) return 1; // Red wins
 
-    return null; // Jogo ainda não terminou
+    return null; // Game not over
   }
 
   void makeBotMove() {
-    int delay = Random().nextInt(1000) + 1000; // Aleatório entre 1000ms (1s) e 2000ms (2s)
+    int delay = Random().nextInt(1000) + 1000; // Random between 1000ms (1s) and 2000ms (2s)
     Future.delayed(Duration(milliseconds: delay), () {
       List<Position> capturingPieces = getAllCapturingPieces();
       if (capturingPieces.isNotEmpty) {
@@ -227,11 +246,11 @@ class GameLogic {
         }
       }
 
-      // Verifica se o jogo acabou
+      // Check if the game is over
       if (isGameOver()) {
         int? winner = getWinner();
         if (onGameEnd != null && winner != null) {
-          onGameEnd!(winner == 1); // 1: Jogador venceu, 2: Bot venceu
+          onGameEnd!(winner == 1); // 1: Player wins, 2: Bot wins
         }
       }
     });
