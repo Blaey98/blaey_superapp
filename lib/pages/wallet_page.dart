@@ -28,10 +28,12 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
   late AnimationController _coinController;
   late AnimationController _balanceController;
   late AnimationController _flashController;
+  late AnimationController _buttonClickController;
   late Animation<double> _progressAnimation;
   late Animation<Offset> _coinAnimation;
   late Animation<Color?> _balanceColorAnimation;
   late Animation<double> _flashAnimation;
+  late Animation<double> _buttonClickAnimation;
 
   final AudioPlayer _audioPlayer = AudioPlayer(); // Adiciona o AudioPlayer
   final AudioCache _audioCache = AudioCache(prefix: 'assets/som/'); // Adiciona o AudioCache
@@ -68,12 +70,19 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
       duration: Duration(milliseconds: 500),
     )..repeat(reverse: true);
 
+    _buttonClickController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 150),
+    );
+
     // Initialize the animations
     _progressAnimation = Tween<double>(begin: 0, end: 1).animate(_progressController);
     _coinAnimation = Tween<Offset>(begin: Offset(0, 1), end: Offset(0, -2)).animate(_coinController);
     _balanceColorAnimation = ColorTween(begin: Colors.black54, end: Colors.green)
         .animate(CurvedAnimation(parent: _balanceController, curve: Curves.easeInOut));
     _flashAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(_flashController);
+    _buttonClickAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
+        CurvedAnimation(parent: _buttonClickController, curve: Curves.easeInOut));
 
     // Pré-carregar sons
     _audioCache.loadAll(['move_sound.mp3', 'moeda.mp3']);
@@ -90,6 +99,7 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
     _coinController.dispose();
     _balanceController.dispose();
     _flashController.dispose();
+    _buttonClickController.dispose();
     _audioPlayer.dispose(); // Dispose o AudioPlayer
     super.dispose();
   }
@@ -150,6 +160,11 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
   }
 
   void _watchAd() async {
+    // Trigger button click animation
+    _buttonClickController.forward().then((_) {
+      _buttonClickController.reverse();
+    });
+    
     isWatchingAd = true;
     final reward = await Navigator.push(
       context,
@@ -532,48 +547,56 @@ class _WalletPageState extends State<WalletPage> with TickerProviderStateMixin {
         ),
         SizedBox(height: 19),
         Center(
-          child: GestureDetector(
-            onTap: _watchAd,
-            child: Column(
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 190,
-                      height: 195,
-                      child: CircularProgressIndicator(
-                        value: adsWatched / totalAds,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                        strokeWidth: 15,
-                        strokeCap: StrokeCap.round,
-                      ),
-                    ),
-                    Neumorphic(
-                      style: NeumorphicStyle(
-                        depth: -10,
-                        color: progressColor,
-                        boxShape: NeumorphicBoxShape.circle(),
-                        lightSource: LightSource.topLeft,
-                        shadowLightColorEmboss: Colors.white,
-                        shadowDarkColorEmboss: Colors.black.withOpacity(0.7),
-                      ),
-                      child: Container(
-                        width: 170,
-                        height: 170,
+          child: AnimatedBuilder(
+            animation: _buttonClickAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _buttonClickAnimation.value,
+                child: GestureDetector(
+                  onTap: _watchAd,
+                  child: Column(
+                    children: [
+                      Stack(
                         alignment: Alignment.center,
-                        child: Icon(
-                          Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 120,
-                        ),
+                        children: [
+                          SizedBox(
+                            width: 190,
+                            height: 195,
+                            child: CircularProgressIndicator(
+                              value: adsWatched / totalAds,
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                              strokeWidth: 15,
+                              strokeCap: StrokeCap.round,
+                            ),
+                          ),
+                          Neumorphic(
+                            style: NeumorphicStyle(
+                              depth: -10,
+                              color: progressColor,
+                              boxShape: NeumorphicBoxShape.circle(),
+                              lightSource: LightSource.topLeft,
+                              shadowLightColorEmboss: Colors.white,
+                              shadowDarkColorEmboss: Colors.black.withOpacity(0.7),
+                            ),
+                            child: Container(
+                              width: 170,
+                              height: 170,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 120,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ],
